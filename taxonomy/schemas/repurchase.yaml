@@ -1,0 +1,21 @@
+schema_id: repurchase
+name: "Repurchase / Withdrawal"
+description: "Form for partial or full withdrawal of funds from a policy."
+fields:
+  - name: policy_number
+    type: string
+    required: true
+    pattern: "^(?:POL-)?[0-9]{8,12}$"
+  - name: id_number
+    type: string
+    required: true
+    pattern: "^[0-9]{13}$"
+  - name: client_name
+    type: string
+    required: true
+  - name: repurchase_amount
+    type: float
+    required: false
+  - name: is_full_withdrawal
+    type: boolean
+    required: true

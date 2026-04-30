@@ -1,0 +1,21 @@
+schema_id: maintenance_client
+name: "Client Details Update"
+description: "Form to update personal details like address or contact info."
+fields:
+  - name: policy_number
+    type: string
+    required: true
+    pattern: "^(?:POL-)?[0-9]{8,12}$"
+  - name: id_number
+    type: string
+    required: true
+    pattern: "^[0-9]{13}$"
+  - name: new_address
+    type: string
+    required: false
+  - name: new_phone
+    type: string
+    required: false
+  - name: new_email
+    type: string
+    required: false

@@ -1,0 +1,18 @@
+schema_id: maintenance_contrib
+name: "Contribution / Premium Update"
+description: "Form to update premium payment amounts or frequency."
+fields:
+  - name: policy_number
+    type: string
+    required: true
+    pattern: "^(?:POL-)?[0-9]{8,12}$"
+  - name: id_number
+    type: string
+    required: true
+    pattern: "^[0-9]{13}$"
+  - name: new_premium_amount
+    type: float
+    required: true
+  - name: payment_frequency
+    type: string
+    required: false

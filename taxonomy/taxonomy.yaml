@@ -1,0 +1,40 @@
+# Taxonomy for Tessera Indexer
+
+main_types:
+  - id: policy_admin
+    label: "Policy Administration"
+  - id: claims
+    label: "Claims"
+  - id: new_business
+    label: "New Business"
+
+sub_types:
+  - id: repurchase
+    main_type: policy_admin
+    label: "Repurchase / Withdrawal"
+    schema_file: "repurchase.yaml"
+  
+  - id: maintenance_client
+    main_type: policy_admin
+    label: "Client Details Update"
+    schema_file: "maintenance_client.yaml"
+    
+  - id: maintenance_contrib
+    main_type: policy_admin
+    label: "Contribution / Premium Update"
+    schema_file: "maintenance_contrib.yaml"
+    
+  - id: claim_death
+    main_type: claims
+    label: "Death Claim"
+    schema_file: "claim_death.yaml"
+    
+  - id: claim_retirement
+    main_type: claims
+    label: "Retirement Claim"
+    schema_file: "claim_retirement.yaml"
+    
+  - id: new_business
+    main_type: new_business
+    label: "New Business Application"
+    schema_file: "new_business.yaml"
