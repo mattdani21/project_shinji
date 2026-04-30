@@ -5,14 +5,27 @@ __pycache__/
 
 # Data & Models (Keep the structure, but ignore the bulk files)
 data/corpus/
+data/corpus_10k/
 data/stress_corpus/
 data/stress_test/
+data/adversarial_test/
 data/human_review/
 data/runs/
+data/test_e2e/
+data/workqueues/
 data/manifest.parquet
 data/generation_audit.jsonl
 data/generation.log
+
+# Model binaries (too large for git)
 models/*.joblib
+models/tessera-encoder-v1/model.onnx
+models/tessera-encoder-v1/model.onnx.data
+
+# Temp files
+*.zip
+confusion_matrix.png
+implementation_plan.md.resolved
 
 # OS
 .DS_Store

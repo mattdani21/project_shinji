@@ -5,6 +5,7 @@ from pydantic import BaseModel, create_model, Field
 from typing import Any, Dict, List, Optional
 import re
 from indexer.tiers.tier4 import Tier4Classifier
+from indexer.tiers.tier1_qr import Tier1QRRouter
 
 class SchemaField(BaseModel):
     name: str
@@ -27,7 +28,9 @@ class RuleEngine:
         self.pydantic_models: Dict[str, Any] = {}
         self._load_schemas()
         
-        # Initialize Tier 4 Classifier (On-Prem ML)
+        # Initialize Tiers
+        self.tier1 = Tier1QRRouter()
+        
         try:
             self.tier4 = Tier4Classifier()
             print("Tier 4 Classifier initialized successfully.")
@@ -163,27 +166,76 @@ class RuleEngine:
                 "routed_to": queue
             }
         
-        # --- Open and parse the PDF attachment page-by-page ---
+        # --- Open and parse the PDF attachment ---
         tasks = []
         try:
+            # 1. Attempt Tier 1: QR Routing and Completeness check
+            qr_results = self.tier1.scan_pdf(str(attachment_path))
+            qr_forms = self.tier1.analyze_completeness(qr_results)
+            
+            # If we found any QR forms, process them
+            if any(f.get("status") in ["complete", "incomplete"] for f in qr_forms):
+                import pypdf
+                reader = pypdf.PdfReader(attachment_path)
+                
+                for i, form in enumerate(qr_forms):
+                    # Combine text from all pages in this form for Tier 2/4 fallback if needed
+                    combined_text = ""
+                    for idx in form["actual_page_indices"]:
+                        combined_text += reader.pages[idx].extract_text() + "\n"
+                    
+                    policy = form.get("policy") or extract_policy_number(combined_text)
+                    client = extract_client_name(combined_text)
+                    
+                    task_id = f"{email_id}_task_{len(tasks) + 1}"
+                    page_range = f"{min(form['pages_found'])}-{max(form['pages_found'])}"
+                    if form.get("pages_missing"):
+                         page_range += f" (MISSING: {form['pages_missing']})"
+                    
+                    item = WorkQueueItem(
+                        email_id=email_id,
+                        task_id=task_id,
+                        policy_number=policy,
+                        client_name=client,
+                        main_type=form["sub_type"], # Tier 1 is source of truth
+                        sub_type=form["sub_type"],
+                        pages=page_range,
+                        confidence=form["confidence"],
+                        source_attachment=str(attachment_path)
+                    )
+                    
+                    if form["status"] == "incomplete":
+                        item.status = "review"
+                        # Extra note for human indexer
+                        item.extracted_fields["rfi_reason"] = form.get("rfi_note")
+                    
+                    queue = wq.route(item)
+                    task_dict = item.to_dict()
+                    task_dict["routed_to"] = queue
+                    tasks.append(task_dict)
+                
+                return {
+                    "type": "bulk" if len(tasks) > 1 else "single",
+                    "total_tasks": len(tasks),
+                    "tasks": tasks,
+                    "method": "tier1_qr_deterministic"
+                }
+
+            # 2. Fallback to Page-by-Page Sequence Splitting (Original Tier 4 logic)
+            import pypdf
             reader = pypdf.PdfReader(attachment_path)
             
-            current_task_pages = []     # Text content of pages in the current form
-            current_start_page = 0      # 0-indexed start of the current form
+            current_task_pages = []
+            current_start_page = 0
             
             for i, page in enumerate(reader.pages):
                 text = page.extract_text() or ""
                 current_task_pages.append(text)
                 
-                # Detect form boundary: "Declaration and Signature" marks the END of a form
                 if "Declaration and Signature" in text:
                     combined_text = "\n".join(current_task_pages)
-                    
-                    # Extract structured fields from the PDF text
                     policy = extract_policy_number(combined_text)
                     client = extract_client_name(combined_text)
-                    
-                    # Classify this chunk (body text + PDF text for better signal)
                     chunk_classification = self.classify_email(combined_text)
                     
                     page_range = f"{current_start_page + 1}-{i + 1}"
@@ -206,11 +258,10 @@ class RuleEngine:
                     task_dict["routed_to"] = queue
                     tasks.append(task_dict)
                     
-                    # Reset for the next client's form
                     current_task_pages = []
                     current_start_page = i + 1
             
-            # Handle any remaining pages that didn't end with a signature
+            # Handle remaining pages
             if current_task_pages:
                 combined_text = "\n".join(current_task_pages)
                 policy = extract_policy_number(combined_text)
@@ -236,7 +287,8 @@ class RuleEngine:
             return {
                 "type": "bulk" if len(tasks) > 1 else "single",
                 "total_tasks": len(tasks),
-                "tasks": tasks
+                "tasks": tasks,
+                "method": "tier4_sequence_fallback"
             }
             
         except Exception as e:

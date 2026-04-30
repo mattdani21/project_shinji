@@ -26,6 +26,7 @@ class ParameterGenerator:
     def _base_params(self, sub_type: str) -> dict:
         return {
             "email_id": str(uuid.uuid4()),
+            "investor_id": f"INV-{self.random.randint(100000, 999999)}",
             "sub_type": sub_type,
             "client_name": f"{self.random.choice(self.first_names)} {self.random.choice(self.last_names)}",
             "id_number": self._generate_sa_id(),
