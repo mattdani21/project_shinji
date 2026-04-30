@@ -1,3 +1,4 @@
+import os
 import yaml
 from pathlib import Path
 from pydantic import BaseModel, create_model, Field
@@ -114,15 +115,137 @@ class RuleEngine:
                 "validated_data": None
             }
 
-    def classify_email(self, body_text: str, attachments: List[str] = []) -> Dict[str, Any]:
+    def process_inbound(self, email_id: str, body_text: str, attachment_path: Optional[str] = None) -> Dict[str, Any]:
         """
-        Implements the 4-tier classification system:
-        Tier 1: Deterministic QR (Simulated)
-        Tier 2-3: Regex/Validation (Handled by RuleEngine)
-        Tier 4: Local ML (Fallback)
+        Main entry point for the indexing pipeline.
+        
+        This is what the human indexer does today:
+        1. Opens the email
+        2. Opens the PDF attachment
+        3. Reads through the pages
+        4. Identifies each form boundary (end of one client's application)
+        5. For each form: extracts the policy number, identifies the form type
+        6. Routes each form as a task to the correct team work queue
+        
+        Supports both single-client and broker bulk (1:N) emails.
         """
-        # Tier 1: Check for simulated QR code in attachments
-        # (In our synthetic corpus, we can look for strings in filenames or just metadata)
+        import pypdf
+        from indexer.workqueue import (
+            WorkQueueItem, WorkQueueManager, 
+            extract_policy_number, extract_client_name
+        )
+        
+        wq = WorkQueueManager()
+        
+        # --- If no attachment, classify from body text only ---
+        if not attachment_path or not os.path.exists(str(attachment_path)):
+            body_result = self.classify_email(body_text)
+            policy = extract_policy_number(body_text)
+            client = extract_client_name(body_text)
+            
+            item = WorkQueueItem(
+                email_id=email_id,
+                task_id=f"{email_id}_task_1",
+                policy_number=policy,
+                client_name=client,
+                main_type=body_result.get("prediction", "unknown"),
+                sub_type=body_result.get("prediction", "unknown"),
+                pages="body_only",
+                confidence=body_result.get("confidence", 0.0),
+                source_attachment=""
+            )
+            queue = wq.route(item)
+            
+            return {
+                "type": "single",
+                "total_tasks": 1,
+                "tasks": [item.to_dict()],
+                "routed_to": queue
+            }
+        
+        # --- Open and parse the PDF attachment page-by-page ---
+        tasks = []
+        try:
+            reader = pypdf.PdfReader(attachment_path)
+            
+            current_task_pages = []     # Text content of pages in the current form
+            current_start_page = 0      # 0-indexed start of the current form
+            
+            for i, page in enumerate(reader.pages):
+                text = page.extract_text() or ""
+                current_task_pages.append(text)
+                
+                # Detect form boundary: "Declaration and Signature" marks the END of a form
+                if "Declaration and Signature" in text:
+                    combined_text = "\n".join(current_task_pages)
+                    
+                    # Extract structured fields from the PDF text
+                    policy = extract_policy_number(combined_text)
+                    client = extract_client_name(combined_text)
+                    
+                    # Classify this chunk (body text + PDF text for better signal)
+                    chunk_classification = self.classify_email(combined_text)
+                    
+                    page_range = f"{current_start_page + 1}-{i + 1}"
+                    task_id = f"{email_id}_task_{len(tasks) + 1}"
+                    
+                    item = WorkQueueItem(
+                        email_id=email_id,
+                        task_id=task_id,
+                        policy_number=policy,
+                        client_name=client,
+                        main_type=chunk_classification.get("prediction", "unknown"),
+                        sub_type=chunk_classification.get("prediction", "unknown"),
+                        pages=page_range,
+                        confidence=chunk_classification.get("confidence", 0.0),
+                        source_attachment=str(attachment_path)
+                    )
+                    
+                    queue = wq.route(item)
+                    task_dict = item.to_dict()
+                    task_dict["routed_to"] = queue
+                    tasks.append(task_dict)
+                    
+                    # Reset for the next client's form
+                    current_task_pages = []
+                    current_start_page = i + 1
+            
+            # Handle any remaining pages that didn't end with a signature
+            if current_task_pages:
+                combined_text = "\n".join(current_task_pages)
+                policy = extract_policy_number(combined_text)
+                client = extract_client_name(combined_text)
+                chunk_classification = self.classify_email(combined_text)
+                
+                item = WorkQueueItem(
+                    email_id=email_id,
+                    task_id=f"{email_id}_task_{len(tasks) + 1}",
+                    policy_number=policy,
+                    client_name=client,
+                    main_type=chunk_classification.get("prediction", "unknown"),
+                    sub_type=chunk_classification.get("prediction", "unknown"),
+                    pages=f"{current_start_page + 1}-{len(reader.pages)}",
+                    confidence=chunk_classification.get("confidence", 0.0),
+                    source_attachment=str(attachment_path)
+                )
+                queue = wq.route(item)
+                task_dict = item.to_dict()
+                task_dict["routed_to"] = queue
+                tasks.append(task_dict)
+                    
+            return {
+                "type": "bulk" if len(tasks) > 1 else "single",
+                "total_tasks": len(tasks),
+                "tasks": tasks
+            }
+            
+        except Exception as e:
+            return {"type": "error", "message": f"Failed to parse PDF: {str(e)}"}
+
+    def classify_email(self, text: str, attachments: List[str] = []) -> Dict[str, Any]:
+        """
+        Implements the 4-tier classification system for a specific text chunk.
+        """
         for attachment in attachments:
             if "qr_type:" in attachment:
                 schema_id = attachment.split("qr_type:")[1].split(".")[0]
@@ -133,12 +256,8 @@ class RuleEngine:
                     "method": "deterministic_qr"
                 }
 
-        # Tier 2-3: Handled by validation if data is already extracted
-        # (For this flow, we assume we're classifying raw body text)
-
-        # Tier 4: Local ML Fallback
         if self.tier4:
-            result = self.tier4.predict(body_text)
+            result = self.tier4.predict(text)
             return {
                 "tier": 4,
                 "prediction": result["prediction"],

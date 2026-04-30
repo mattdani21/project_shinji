@@ -7,8 +7,15 @@ main_types:
     label: "Claims"
   - id: new_business
     label: "New Business"
+  - id: broker_comms
+    label: "Broker Communications"
 
 sub_types:
+  - id: bulk_instructions
+    main_type: broker_comms
+    label: "Bulk Instructions"
+    schema_file: ""
+
   - id: repurchase
     main_type: policy_admin
     label: "Repurchase / Withdrawal"
