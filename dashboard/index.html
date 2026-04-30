@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tessera AI Indexer</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div class="brand-row">
+        <div class="mark" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <rect x="0.5" y="0.5" width="4" height="4" rx="1" stroke="white" stroke-opacity="0.85"></rect>
+            <rect x="7" y="0.5" width="4" height="4" rx="1" fill="white" fill-opacity="0.9"></rect>
+            <rect x="0.5" y="7" width="4" height="4" rx="1" fill="white" fill-opacity="0.5"></rect>
+            <rect x="7" y="7" width="4" height="4" rx="1" stroke="white" stroke-opacity="0.85"></rect>
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <strong>Tessera</strong>
+          <span>AI Indexer</span>
+        </div>
+        <nav class="tabs" aria-label="Dashboard sections">
+          <button class="tab active" type="button">Triage</button>
+          <button class="tab" type="button">Audit</button>
+          <button class="tab" type="button">Replay</button>
+          <button class="tab" type="button">Settings</button>
+        </nav>
+      </div>
+      <div class="top-actions">
+        <span class="mono version">v0.4.2 · uptime 14d</span>
+        <span class="onprem"><i></i> On-prem</span>
+        <span class="avatar-small">JL</span>
+      </div>
+    </header>
+
+    <section class="sovereignty" aria-label="Data sovereignty">
+      <div>
+        <span class="eyebrow">Data sovereignty</span>
+        <strong>Tessera processes mail entirely within your infrastructure.</strong>
+      </div>
+      <div class="sovereignty-stats">
+        <span><b id="stat-processed">0</b> mails today</span>
+        <span><b id="stat-api">0</b> external API calls</span>
+        <span><b id="stat-egress">0 bytes</b> customer data egress</span>
+        <span><b id="stat-latency">0ms</b> avg inference</span>
+      </div>
+    </section>
+
+    <main class="workspace">
+      <section class="panel mailbox">
+        <div class="panel-header">
+          <div>
+            <span class="panel-icon">▣</span>
+            <h2>Mailbox</h2>
+            <span id="mail-count" class="counter">0</span>
+          </div>
+          <span class="mono muted">indexer@tessera</span>
+        </div>
+        <div class="search-wrap">
+          <label class="search">
+            <span>⌕</span>
+            <input id="mail-search" type="search" placeholder="Search mail" autocomplete="off" />
+            <kbd>⌘K</kbd>
+          </label>
+        </div>
+        <div id="inbox-list" class="scroll-list"></div>
+        <footer class="mail-footer">
+          <button id="process-all" class="primary-action" type="button">
+            Process all
+          </button>
+          <div class="stat-grid">
+            <div class="stat-card">
+              <b id="pending-count" class="mono">0</b>
+              <span>Pending</span>
+            </div>
+            <div class="stat-card">
+              <b id="routed-count" class="mono green">0</b>
+              <span>Routed</span>
+            </div>
+            <div class="stat-card">
+              <b class="mono accent">94%</b>
+              <span>Avg conf.</span>
+            </div>
+          </div>
+        </footer>
+      </section>
+
+      <section class="panel queues">
+        <div class="panel-header">
+          <div>
+            <span class="panel-icon">▥</span>
+            <h2>Work queues</h2>
+            <span id="queue-count" class="counter">0</span>
+          </div>
+          <span class="pill blue">⚡ auto-route</span>
+        </div>
+        <div id="queue-list" class="scroll-list"></div>
+        <footer class="queue-footer">
+          <span>Routed today</span>
+          <strong id="queue-footer-total" class="mono">0 · 1 needs review</strong>
+        </footer>
+      </section>
+
+      <section class="detail-shell">
+        <div class="panel-header detail-header">
+          <div>
+            <span class="panel-icon">▤</span>
+            <h2>Detail view</h2>
+          </div>
+          <div id="detail-badges" class="badge-row"></div>
+        </div>
+        <div id="detail-view" class="detail-scroll"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

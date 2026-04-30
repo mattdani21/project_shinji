@@ -45,6 +45,16 @@ python3 main_demo.py
 ```
 This will output the routing decisions, confidence scores, and populate the `data/workqueues/` and `data/human_review/` directories.
 
+### Running the Dashboard
+
+The ShinjUI dashboard is integrated into the Python app and runs locally without a JavaScript build step:
+
+```bash
+python3 main_demo.py --dashboard --open
+```
+
+This serves the triage UI at `http://127.0.0.1:8765`, including mailbox routing, work queues, detail review, and on-prem sovereignty counters.
+
 ### Generating Synthetic Data
 
 If you want to generate a new corpus from scratch:
@@ -85,6 +95,7 @@ This outputs an accuracy report and an RFI (Request for Information) threshold a
 -   **`indexer/`**: Core logic for the Rule Engine, Classification Tiers, Work Queues, and HITL exporter.
 -   **`training/`**: Scripts for data preparation, model training (Colab), and local calibration.
 -   **`models/`**: Stores the ONNX model binaries and TF-IDF fallback models (Note: Large binaries are excluded from Git).
+-   **`dashboard/`**: Local dashboard UI assets served by `indexer.dashboard`.
 -   **`data/`**: Stores generated corpora, training splits, and output queues.
 -   **`docs/`**: Documentation, including the Colab Handguide.
 -   **`main_demo.py`**: The primary entry point to demonstrate the system end-to-end.
