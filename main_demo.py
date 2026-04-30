@@ -1,4 +1,5 @@
 import os
+import argparse
 import pandas as pd
 from indexer.rules.engine import RuleEngine
 from indexer.hitl.exporter import HITLExporter, process_pipeline
@@ -58,5 +59,24 @@ def run_demo(manifest_path: str = "data/corpus_10k/manifest_10k.parquet", num_sa
     print(f"\nWork queues populated in: data/workqueues/")
     print(f"Human review files exported to: {exporter.review_dir}")
 
+def main():
+    parser = argparse.ArgumentParser(description="Run the Tessera AI Indexer demo.")
+    parser.add_argument("--dashboard", action="store_true", help="Run the local dashboard UI instead of the CLI demo.")
+    parser.add_argument("--host", default="127.0.0.1", help="Dashboard host when --dashboard is set.")
+    parser.add_argument("--port", default=8765, type=int, help="Dashboard port when --dashboard is set.")
+    parser.add_argument("--open", action="store_true", help="Open the dashboard in a browser.")
+    parser.add_argument("--manifest", default="data/corpus_10k/manifest_10k.parquet", help="Manifest path for the CLI demo.")
+    parser.add_argument("--samples", default=10, type=int, help="Number of samples for the CLI demo.")
+    args = parser.parse_args()
+
+    if args.dashboard:
+        from indexer.dashboard import run
+
+        run(host=args.host, port=args.port, open_browser=args.open)
+        return
+
+    run_demo(manifest_path=args.manifest, num_samples=args.samples)
+
+
 if __name__ == "__main__":
-    run_demo()
+    main()
