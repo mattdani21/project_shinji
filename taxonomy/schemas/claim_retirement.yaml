@@ -1,0 +1,19 @@
+schema_id: claim_retirement
+name: "Retirement Claim"
+description: "Form to claim retirement benefits."
+fields:
+  - name: policy_number
+    type: string
+    required: true
+    pattern: "^(?:POL-)?[0-9]{8,12}$"
+  - name: id_number
+    type: string
+    required: true
+    pattern: "^[0-9]{13}$"
+  - name: client_name
+    type: string
+    required: true
+  - name: retirement_date
+    type: string
+    required: true
+    pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"

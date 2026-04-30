@@ -1,0 +1,18 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Data & Models (Keep the structure, but ignore the bulk files)
+data/corpus/
+data/stress_corpus/
+data/stress_test/
+data/human_review/
+data/runs/
+data/manifest.parquet
+data/generation_audit.jsonl
+data/generation.log
+models/*.joblib
+
+# OS
+.DS_Store

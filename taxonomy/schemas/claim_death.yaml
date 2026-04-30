@@ -1,0 +1,21 @@
+schema_id: claim_death
+name: "Death Claim"
+description: "Form to claim policy benefits due to death."
+fields:
+  - name: policy_number
+    type: string
+    required: true
+    pattern: "^(?:POL-)?[0-9]{8,12}$"
+  - name: id_number
+    type: string
+    required: true
+    pattern: "^[0-9]{13}$"
+  - name: deceased_name
+    type: string
+    required: true
+  - name: death_certificate_number
+    type: string
+    required: true
+  - name: beneficiary_name
+    type: string
+    required: true

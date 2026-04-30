@@ -1,0 +1,17 @@
+schema_id: new_business
+name: "New Business Application"
+description: "Application for a new insurance policy."
+fields:
+  - name: id_number
+    type: string
+    required: true
+    pattern: "^[0-9]{13}$"
+  - name: client_name
+    type: string
+    required: true
+  - name: initial_premium
+    type: float
+    required: true
+  - name: product_code
+    type: string
+    required: true
