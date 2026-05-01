@@ -4,6 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tessera AI Indexer</title>
+  <meta name="description" content="On-prem document indexing and workflow automation dashboard for Tessera AI." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
@@ -22,6 +26,7 @@
           <strong>Tessera</strong>
           <span>AI Indexer</span>
         </div>
+        <span class="brand-divider"></span>
         <nav class="tabs" aria-label="Dashboard sections">
           <button class="tab active" type="button">Triage</button>
           <button class="tab" type="button">Audit</button>
@@ -30,9 +35,16 @@
         </nav>
       </div>
       <div class="top-actions">
-        <span class="mono version">v0.4.2 · uptime 14d</span>
-        <span class="onprem"><i></i> On-prem</span>
-        <span class="avatar-small">JL</span>
+        <div class="version-block mono">
+          <span>v0.4.2</span>
+          <span class="version-divider"></span>
+          <span>uptime 14d</span>
+        </div>
+        <div class="onprem">
+          <span class="onprem-dot"></span>
+          On-prem
+        </div>
+        <div class="avatar-small">JL</div>
       </div>
     </header>
 
@@ -53,7 +65,11 @@
       <section class="panel mailbox">
         <div class="panel-header">
           <div>
-            <span class="panel-icon">▣</span>
+            <span class="panel-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 13l3-7h12l3 7" /><path d="M3 13v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5" /><path d="M3 13h5l1.5 2h5L16 13h5" />
+              </svg>
+            </span>
             <h2>Mailbox</h2>
             <span id="mail-count" class="counter">0</span>
           </div>
@@ -61,13 +77,18 @@
         </div>
         <div class="search-wrap">
           <label class="search">
-            <span>⌕</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+              <circle cx="11" cy="11" r="6.5" /><path d="M20 20l-3.5-3.5" />
+            </svg>
             <input id="mail-search" type="search" placeholder="Search mail" autocomplete="off" />
-            <kbd>⌘K</kbd>
+            <kbd class="mono">⌘K</kbd>
           </label>
         </div>
         <div id="inbox-list" class="scroll-list"></div>
         <footer class="mail-footer">
+          <button id="generate-batch" class="secondary-action" type="button">
+            Generate batch (10)
+          </button>
           <button id="process-all" class="primary-action" type="button">
             Process all
           </button>
@@ -91,11 +112,18 @@
       <section class="panel queues">
         <div class="panel-header">
           <div>
-            <span class="panel-icon">▥</span>
+            <span class="panel-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3l9 5-9 5-9-5 9-5z" /><path d="M3 13l9 5 9-5" /><path d="M3 17l9 5 9-5" />
+              </svg>
+            </span>
             <h2>Work queues</h2>
             <span id="queue-count" class="counter">0</span>
           </div>
-          <span class="pill blue">⚡ auto-route</span>
+          <span class="pill blue">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L4 14h7l-1 7 9-11h-7l1-7z" /></svg>
+            auto-route
+          </span>
         </div>
         <div id="queue-list" class="scroll-list"></div>
         <footer class="queue-footer">
@@ -107,7 +135,11 @@
       <section class="detail-shell">
         <div class="panel-header detail-header">
           <div>
-            <span class="panel-icon">▤</span>
+            <span class="panel-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5" /><path d="M9 13h6M9 17h4" />
+              </svg>
+            </span>
             <h2>Detail view</h2>
           </div>
           <div id="detail-badges" class="badge-row"></div>

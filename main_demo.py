@@ -1,10 +1,11 @@
 import os
 import argparse
-import pandas as pd
-from indexer.rules.engine import RuleEngine
-from indexer.hitl.exporter import HITLExporter, process_pipeline
 
 def run_demo(manifest_path: str = "data/corpus_10k/manifest_10k.parquet", num_samples: int = 10):
+    import pandas as pd
+    from indexer.rules.engine import RuleEngine
+    from indexer.hitl.exporter import HITLExporter
+
     print("=== Tessera AI Indexer Demo ===")
     
     if not os.path.exists(manifest_path):
@@ -62,6 +63,7 @@ def run_demo(manifest_path: str = "data/corpus_10k/manifest_10k.parquet", num_sa
 def main():
     parser = argparse.ArgumentParser(description="Run the Tessera AI Indexer demo.")
     parser.add_argument("--dashboard", action="store_true", help="Run the local dashboard UI instead of the CLI demo.")
+    parser.add_argument("--live", action="store_true", help="Connect to a real IMAP mailbox for live processing (requires config/mailbox.env).")
     parser.add_argument("--host", default="127.0.0.1", help="Dashboard host when --dashboard is set.")
     parser.add_argument("--port", default=8765, type=int, help="Dashboard port when --dashboard is set.")
     parser.add_argument("--open", action="store_true", help="Open the dashboard in a browser.")
@@ -70,7 +72,32 @@ def main():
     args = parser.parse_args()
 
     if args.dashboard:
-        from indexer.dashboard import run
+        from indexer.dashboard import run, STATE
+
+        if args.live:
+            # Start with an empty inbox for live mode
+            STATE.reset_empty()
+
+            try:
+                from indexer.imap_watcher import IMAPWatcher, load_credentials
+
+                creds = load_credentials()
+                watcher = IMAPWatcher(
+                    host=creds.get("TESSERA_IMAP_HOST", "imap.gmail.com"),
+                    email_addr=creds["TESSERA_IMAP_EMAIL"],
+                    password=creds["TESSERA_IMAP_PASSWORD"],
+                    folder=creds.get("TESSERA_IMAP_FOLDER", "INBOX"),
+                    poll_interval=int(creds.get("TESSERA_POLL_INTERVAL", "5")),
+                    on_email=STATE.push_email,
+                )
+                watcher.start()
+                print("IMAP watcher started. Emails will appear on the dashboard as they arrive.")
+            except FileNotFoundError as exc:
+                print(f"\n⚠️  {exc}")
+                print("Running dashboard without live mailbox connection.\n")
+            except Exception as exc:
+                print(f"\n⚠️  IMAP watcher failed to start: {exc}")
+                print("Running dashboard without live mailbox connection.\n")
 
         run(host=args.host, port=args.port, open_browser=args.open)
         return
