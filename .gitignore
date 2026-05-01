@@ -29,3 +29,4 @@ implementation_plan.md.resolved
 
 # OS
 .DS_Store
+config/mailbox.env
