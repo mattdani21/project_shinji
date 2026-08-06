@@ -1,0 +1,25 @@
+# Tessera AI Indexer — example install config.
+#
+# Copy to your deploy directory as `tessera_indexer.yaml` (or point
+# $TESSERA_INDEXER_CONFIG at it) and adjust. Relative paths resolve
+# against this file's directory, so a self-contained deploy dir
+# (config + models/ + data/) works from any working directory.
+#
+# Every key is optional; omitted keys fall back to built-in defaults
+# (package-bundled taxonomy, cwd-relative data dirs).
+
+# Taxonomy & form schemas (default: bundled with the wheel)
+#taxonomy_path: taxonomy/taxonomy.yaml
+#schema_dir: taxonomy/schemas
+
+# Tier 4 models (deep-learning ONNX + TF-IDF fallback)
+#onnx_model_dir: models/tessera-encoder-v1
+#tfidf_model_path: models/tier4_model.joblib
+
+# Runtime data directories
+#queue_dir: data/workqueues
+#review_dir: data/human_review
+#inbox_dir: data/inbox
+
+# HITL threshold: items with confidence below this go to human review
+#hitl_threshold: 0.85
