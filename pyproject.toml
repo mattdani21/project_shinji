@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tessera-indexer"
+version = "0.1.0"
+description = "Tessera AI Indexer — multi-tier document routing (QR → OCR → NER → XLM-RoBERTa ONNX) with 100% local inference"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Proprietary" }
+authors = [{ name = "Tessera (Empyrean)" }]
+keywords = ["document-indexing", "routing", "ocr", "ner", "onnx", "data-sovereignty", "workflow"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Topic :: Text Processing :: Indexing",
+]
+
+# Core runtime: deterministic routing (Tier 1 QR), TF-IDF fallback (Tier 4),
+# work queues, HITL export, schema validation. Compatible-release pins (~=)
+# keep installs reproducible within a minor version while letting patch
+# releases flow in.
+dependencies = [
+    "pydantic~=2.5",
+    "PyYAML~=6.0",
+    "pypdf~=6.0",
+    "PyMuPDF~=1.24",
+    "opencv-python-headless~=4.9",
+    "numpy~=1.26",
+    "pandas~=2.2",
+    "pyarrow~=16.0",
+    "scikit-learn~=1.4",
+    "joblib~=1.3",
+    "requests~=2.31",
+]
+
+[project.optional-dependencies]
+# Deep-learning Tier 4 (XLM-RoBERTa ONNX inference; no torch needed)
+onnx = [
+    "onnxruntime~=1.17",
+    "transformers~=4.40",
+]
+# Synthetic corpus generation (PDF + QR form generation)
+gen = [
+    "reportlab~=4.2",
+    "qrcode~=7.4",
+]
+# Test / build tooling
+dev = [
+    "pytest~=8.0",
+    "build~=1.0",
+    "wheel~=0.42",
+    "reportlab~=4.2",
+    "qrcode~=7.4",
+]
+
+[project.scripts]
+tessera-indexer = "indexer.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["indexer*", "generator*"]
+
+[tool.setuptools.package-data]
+indexer = ["taxonomy/*.yaml", "taxonomy/schemas/*.yaml"]
