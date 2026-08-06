@@ -6,10 +6,12 @@ Core pipeline works: Tier 1 (QR routing) + Tier 4 (XLM-RoBERTa ONNX, local infer
 
 Packaged as an installable wheel (`tessera-indexer`, pyproject.toml, pinned compatible-release deps, extras: `onnx` / `gen` / `dev`) with a `tessera-indexer` CLI (`check` / `classify` / `ingest-batch`) and a `Dockerfile` for on-prem containers. Verified 2026-08-06: wheel built, installed into a fresh venv, full suite passes against the installed package from a scratch dir (9 passed, 1 skipped), CLI smoke-tested, container image builds.
 
+CI added (`.github/workflows/ci.yml`): runs the full suite on every PR/push to main across Python 3.9 / 3.11 / 3.12 (editable `[dev]` install), plus a wheel-build check.
+
 ## Broken / incomplete
 
 - Tier 2 (OCR & template matching) and Tier 3 (NER & taxonomy) are stubbed: README marks them "Stubbed" and `indexer/tiers/` contains only `tier1_qr.py`, `tier4.py`, `baselines.py`, `train.py`
-- No CI: `.github/workflows` does not exist, so the two test files are never run automatically
+- Installs are not yet config-driven: taxonomy/model/queue paths and the HITL confidence threshold are still hardcoded defaults (overridable via constructor args only)
 - No recorded pilot on real inbound documents; demo runs on the synthetic corpus (`main_demo.py` needs `data/corpus_10k/manifest_10k.parquet`)
 
 ## Blockers
