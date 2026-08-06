@@ -22,9 +22,9 @@ Sell large-scale email-indexing installs to large investors (Tessera AI Indexer 
 
 ### M3 — Pilot installs
 
-- [ ] Run a pilot against a real inbound-document queue in business operations: ingest → route → HITL review loop
-- [ ] Measure and document routing accuracy, HITL rate, queue throughput, and RFI threshold behavior (`training/calibrate.py`)
-- [ ] Fix pilot findings back into `indexer/`
+- [ ] Run a pilot against a real inbound-document queue in business operations: ingest → route → HITL review loop *(needs business mail access — owner handoff; simulated pilot machinery is ready: `pilot/`)*
+- [x] Measure and document routing accuracy, HITL rate, queue throughput, and RFI threshold behavior (`training/calibrate.py`) — machinery + simulated pilot report delivered (`pilot/metrics.py`, `pilot/reports/pilot_report.md`); real-data numbers pending the pilot run
+- [ ] Fix pilot findings back into `indexer/` *(two findings from the simulated pilot already fixed: flaky QR scan no longer errors the inbound; body-only route now reports its method)*
 *Definition of done:* At least one pilot processes real inbound documents with a documented accuracy/HITL/throughput report, with inference staying fully local.
 
 ### M4 — Sales materials

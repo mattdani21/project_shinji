@@ -178,15 +178,24 @@ class RuleEngine:
                 "type": "single",
                 "total_tasks": 1,
                 "tasks": [item.to_dict()],
-                "routed_to": queue
+                "routed_to": queue,
+                "method": "body_only_classify",
+                "tier": body_result.get("tier", 3),
             }
         
         # --- Open and parse the PDF attachment ---
         tasks = []
         try:
-            # 1. Attempt Tier 1: QR Routing and Completeness check
-            qr_results = self.tier1.scan_pdf(str(attachment_path))
-            qr_forms = self.tier1.analyze_completeness(qr_results)
+            # 1. Attempt Tier 1: QR Routing and Completeness check.
+            #    A QR-scan failure (cv2 can be flaky on some renders) must NOT
+            #    kill the inbound — fall through to Tier 2 instead.
+            qr_results = []
+            qr_forms = []
+            try:
+                qr_results = self.tier1.scan_pdf(str(attachment_path))
+                qr_forms = self.tier1.analyze_completeness(qr_results)
+            except Exception as e:
+                print(f"Tier 1 QR scan failed ({e}); falling through to Tier 2.")
             
             # If we found any QR forms, process them
             if any(f.get("status") in ["complete", "incomplete"] for f in qr_forms):
