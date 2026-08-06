@@ -27,16 +27,61 @@ The indexing pipeline is managed by a **Rule Engine** (`indexer/rules/engine.py`
 
 ## Installation
 
-1.  Clone the repository.
-2.  Ensure you have Python 3.9+ installed.
-3.  Install dependencies:
-    ```bash
-    pip install pandas numpy scikit-learn reportlab qrcode onnxruntime transformers torch pyarrow
-    ```
+### From the wheel (recommended)
+
+The indexer ships as a standard Python wheel with pinned (compatible-release)
+dependencies — no bare `pip install` lists.
+
+```bash
+# Core install: Tier 1 (QR routing), Tier 4 TF-IDF fallback, work queues, HITL
+pip install tessera-indexer
+
+# Deep-learning Tier 4 (XLM-RoBERTa ONNX inference, fully local)
+pip install "tessera-indexer[onnx]"
+
+# Synthetic corpus generation (PDF + QR form generator)
+pip install "tessera-indexer[gen]"
+```
+
+Build the wheel from source:
+
+```bash
+pip install build
+python -m build --wheel        # → dist/tessera_indexer-<version>-py3-none-any.whl
+```
+
+### Container (on-prem installs)
+
+```bash
+docker build -t tessera-indexer .
+docker run --rm -v /host/models:/app/models -v /host/inbox:/app/data/inbox \
+  tessera-indexer check
+```
+
+All inference runs inside the container — no data leaves the host.
+
+### From source (development)
+
+```bash
+git clone https://github.com/mattdani21/project_shinji
+cd project_shinji
+pip install -e ".[dev]"         # editable install + test/build tooling
+```
+
+Requires Python 3.9+.
 
 ## Usage
 
-### Running the Demo
+### CLI (installed)
+
+```bash
+tessera-indexer check          # smoke-test an install: taxonomy, tiers, models
+tessera-indexer classify --file email_body.txt   # route one email body (JSON)
+tessera-indexer ingest-batch /path/to/inbox      # batch-process a directory
+tessera-indexer --version
+```
+
+### Running the Demo (from source)
 
 The main demo processes a mix of clean and messy samples to showcase the routing logic (Auto-Routing vs. HITL).
 
@@ -82,7 +127,7 @@ This outputs an accuracy report and an RFI (Request for Information) threshold a
 ## Project Structure
 
 -   **`generator/`**: Scripts for creating synthetic emails, PDFs, and QR codes.
--   **`indexer/`**: Core logic for the Rule Engine, Classification Tiers, Work Queues, and HITL exporter.
+-   **`indexer/`**: Core logic for the Rule Engine, Classification Tiers, Work Queues, and HITL exporter. Ships as the `tessera-indexer` wheel; taxonomy schemas are bundled as package data (`indexer/taxonomy/`).
 -   **`training/`**: Scripts for data preparation, model training (Colab), and local calibration.
 -   **`models/`**: Stores the ONNX model binaries and TF-IDF fallback models (Note: Large binaries are excluded from Git).
 -   **`data/`**: Stores generated corpora, training splits, and output queues.
