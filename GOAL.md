@@ -15,7 +15,7 @@ Sell large-scale email-indexing installs to large investors (Tessera AI Indexer 
 ### M2 — Complete Tier 2 and Tier 3 (OCR + NER)
 
 - [x] Tier 2: OCR & template matching for standard forms without QR codes (stubbed in README; no tier2 module exists in `indexer/tiers/`)
-- [ ] Tier 3: NER & taxonomy for keyword/policy/ID extraction from unstructured text (stubbed; feeds `taxonomy/taxonomy.yaml`)
+- [x] Tier 3: NER & taxonomy for keyword/policy/ID extraction from unstructured text (stubbed; feeds `taxonomy/taxonomy.yaml`)
 - [ ] Extend the eval harness (`eval/`) and adversarial corpus (`generator/adversarial_test.py`, `generator/messy_generator.py`) to cover the new tiers
 - [ ] Add tests for both tiers in `tests/`
 *Definition of done:* All four tiers implemented; routing accuracy on the eval harness improves over the Tier-1+Tier-4-only pipeline with no regression on the QR or ONNX paths (calibration currently reports overall and auto-route accuracy via `training/calibrate.py`).
