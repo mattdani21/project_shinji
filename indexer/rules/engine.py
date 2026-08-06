@@ -2,10 +2,11 @@ import os
 import yaml
 from pathlib import Path
 from pydantic import BaseModel, create_model, Field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 import re
 from indexer.tiers.tier4 import Tier4Classifier
 from indexer.tiers.tier1_qr import Tier1QRRouter
+from indexer.config import IndexerConfig, coerce_config
 
 class SchemaField(BaseModel):
     name: str
@@ -20,13 +21,16 @@ class FormSchema(BaseModel):
     fields: List[SchemaField]
 
 class RuleEngine:
-    def __init__(self, taxonomy_path: Optional[str] = None, schema_dir: Optional[str] = None):
+    def __init__(self, taxonomy_path: Optional[str] = None, schema_dir: Optional[str] = None,
+                 config: Optional[Union[str, "IndexerConfig"]] = None):
+        # Explicit args win over config; config wins over built-in defaults.
         # Defaults resolve to the taxonomy bundled with the installed package
         # (works both from a source checkout and from a wheel install).
+        self.config = coerce_config(config) or IndexerConfig.load()
         if taxonomy_path is None:
-            taxonomy_path = str(Path(__file__).resolve().parent.parent / "taxonomy" / "taxonomy.yaml")
+            taxonomy_path = self.config.taxonomy_path
         if schema_dir is None:
-            schema_dir = str(Path(__file__).resolve().parent.parent / "taxonomy" / "schemas")
+            schema_dir = self.config.schema_dir
         self.taxonomy_path = Path(taxonomy_path)
         self.schema_dir = Path(schema_dir)
         self.taxonomy = self._load_yaml(self.taxonomy_path)
@@ -38,7 +42,7 @@ class RuleEngine:
         self.tier1 = Tier1QRRouter()
         
         try:
-            self.tier4 = Tier4Classifier()
+            self.tier4 = Tier4Classifier(config=self.config)
             print("Tier 4 Classifier initialized successfully.")
         except Exception as e:
             print(f"Tier 4 initialization failed: {e}. Fallback to basic keyword matching might be needed.")
@@ -144,7 +148,7 @@ class RuleEngine:
             extract_policy_number, extract_client_name
         )
         
-        wq = WorkQueueManager()
+        wq = WorkQueueManager(config=self.config)
         
         # --- If no attachment, classify from body text only ---
         if not attachment_path or not os.path.exists(str(attachment_path)):

@@ -74,19 +74,26 @@ class WorkQueueManager:
     Manages all team work queues. Persists to disk as JSONL files.
     Each queue is a separate file: workqueues/{main_type}.jsonl
     """
-    def __init__(self, queue_dir: str = "data/workqueues"):
-        self.queue_dir = queue_dir
+    def __init__(self, queue_dir: Optional[str] = None, hitl_threshold: Optional[float] = None,
+                 config=None):
+        from indexer.config import coerce_config
+        config = coerce_config(config)
+        if config is not None:
+            queue_dir = queue_dir or config.queue_dir
+            hitl_threshold = hitl_threshold if hitl_threshold is not None else config.hitl_threshold
+        self.queue_dir = queue_dir or "data/workqueues"
+        self.hitl_threshold = hitl_threshold if hitl_threshold is not None else 0.85
         os.makedirs(self.queue_dir, exist_ok=True)
-        
+
     def route(self, item: WorkQueueItem):
         """Route a work queue item to the correct team queue."""
         queue_name = SUB_TYPE_TO_QUEUE.get(item.sub_type, "unknown")
         item.main_type = queue_name
-        
+
         # If confidence is below threshold, mark for human review
-        if item.confidence < 0.85:
+        if item.confidence < self.hitl_threshold:
             item.status = "review"
-            
+
         queue_path = os.path.join(self.queue_dir, f"{queue_name}.jsonl")
         with open(queue_path, "a") as f:
             f.write(json.dumps(item.to_dict()) + "\n")
