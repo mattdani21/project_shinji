@@ -98,8 +98,9 @@ def mailbox_watcher(host: str, email: str, password: str,
     #   mail.login(email, password)
     #   mail.select(folder)
     #
-    # For the demo, we simulate by watching a local directory
-    watch_dir = "data/inbox"
+    # For the demo, we simulate by watching a local directory.
+    # Honor a module-level override (tests set indexer.ingest.watch_dir).
+    watch_dir = globals().get("watch_dir") or "data/inbox"
     os.makedirs(watch_dir, exist_ok=True)
     processed = set()
     
