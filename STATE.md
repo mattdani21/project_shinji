@@ -10,10 +10,11 @@ CI added (`.github/workflows/ci.yml`): runs the full suite on every PR/push to m
 
 Installs are config-driven (`indexer/config.py`): one YAML file controls taxonomy/schema paths, ONNX + TF-IDF model paths, queue/review/inbox dirs, and the HITL confidence threshold. Resolution: `--config` → `$TESSERA_INDEXER_CONFIG` → `./tessera_indexer.yaml` → built-in defaults; relative paths resolve against the config file's directory. CLI gained `config` (print effective config) and `--config` on all subcommands; annotated example ships in the wheel (`indexer/config/example.yaml`).
 
+M1 (productize) complete: wheel + container + CI + config + on-prem install checklist (`docs/on_prem_install.md`, incl. firewall/egress verification for the data-sovereignty guarantee — verified: the routing pipeline makes zero network calls; the only HTTP client is the unreferenced benchmark baseline).
+
 ## Broken / incomplete
 
 - Tier 2 (OCR & template matching) and Tier 3 (NER & taxonomy) are stubbed: README marks them "Stubbed" and `indexer/tiers/` contains only `tier1_qr.py`, `tier4.py`, `baselines.py`, `train.py`
-- On-prem install checklist (M1, final item) not yet written
 - No recorded pilot on real inbound documents; demo runs on the synthetic corpus (`main_demo.py` needs `data/corpus_10k/manifest_10k.parquet`)
 
 ## Blockers
