@@ -2,13 +2,14 @@
 
 ## Current state
 
-Dormant. Core pipeline works: Tier 1 (QR routing) + Tier 4 (XLM-RoBERTa ONNX, local inference) implemented, HITL exporter (`indexer/hitl/exporter.py`), work queues (`indexer/workqueue.py`), synthetic corpus generator (10k-scale, `generator/scale_corpus.py`), eval harness (`eval/`), and taxonomy. The 30-day plan in `tessera_indexer_roadmap_v2.md` (phases 0–6) exists and was largely executed. Two test files exist.
+Core pipeline works: Tier 1 (QR routing) + Tier 4 (XLM-RoBERTa ONNX, local inference) implemented, HITL exporter (`indexer/hitl/exporter.py`), work queues (`indexer/workqueue.py`), synthetic corpus generator (10k-scale, `generator/scale_corpus.py`), eval harness (`eval/`), and taxonomy (now bundled in-package at `indexer/taxonomy/`). The 30-day plan in `tessera_indexer_roadmap_v2.md` (phases 0–6) exists and was largely executed. Two test files exist.
+
+Packaged as an installable wheel (`tessera-indexer`, pyproject.toml, pinned compatible-release deps, extras: `onnx` / `gen` / `dev`) with a `tessera-indexer` CLI (`check` / `classify` / `ingest-batch`) and a `Dockerfile` for on-prem containers. Verified 2026-08-06: wheel built, installed into a fresh venv, full suite passes against the installed package from a scratch dir (9 passed, 1 skipped), CLI smoke-tested, container image builds.
 
 ## Broken / incomplete
 
 - Tier 2 (OCR & template matching) and Tier 3 (NER & taxonomy) are stubbed: README marks them "Stubbed" and `indexer/tiers/` contains only `tier1_qr.py`, `tier4.py`, `baselines.py`, `train.py`
 - No CI: `.github/workflows` does not exist, so the two test files are never run automatically
-- No packaging/deployment story (README install = bare pip list; ONNX binaries in `models/` are gitignored, so an install must rebuild or re-add them)
 - No recorded pilot on real inbound documents; demo runs on the synthetic corpus (`main_demo.py` needs `data/corpus_10k/manifest_10k.parquet`)
 
 ## Blockers
