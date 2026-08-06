@@ -60,6 +60,12 @@ docker run --rm -v /host/models:/app/models -v /host/inbox:/app/data/inbox \
 
 All inference runs inside the container — no data leaves the host.
 
+### On-prem installs
+
+Follow the [on-prem install checklist](docs/on_prem_install.md) — prerequisites,
+model placement, config, one-command verification, and the data-sovereignty
+(firewall/egress) checks that make the product sellable to large investors.
+
 ### From source (development)
 
 ```bash
