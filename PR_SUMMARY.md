@@ -1,46 +1,33 @@
-# M1.4 — On-prem install checklist (data-sovereignty doc)
+# M2.1 — Tier 2: OCR & template matching for legacy (QR-less) forms
 
 ## What
 
-`docs/on_prem_install.md` — the on-prem install checklist that closes out M1.
-Sections:
+`indexer/tiers/tier2.py` — `Tier2TemplateMatcher`, the first piece of M2:
 
-1. **Prerequisites** — OS/Python/disk; explicit "no internet requirement at runtime"
-2. **Install** — wheel path (`pip install tessera-indexer[onnx]`) or container path
-3. **Model placement** — ONNX + label_map + TF-IDF placement (models are trained artifacts, not shipped in the wheel)
-4. **Configuration** — copy the annotated example, set paths + `hitl_threshold`, confirm with `tessera-indexer config`
-5. **Verify the install** — one command: `tessera-indexer check` (6 schemas, tier1 ok, tier4 backend)
-6. **Data-sovereignty guarantees (verify, don't assume)** — firewall: inbound mail only / zero outbound HTTPS; no telemetry; `api_used` is always a local backend; optional `--network none` container hardening
-7. **Go live** — batch backfill, watcher mode, HITL review loop, backups of queue/review dirs + config
-8. **Operations** — log routing, model updates without code changes, threshold tuning via `training/calibrate.py`, rollback
-
-Plus a definition of done: a machine that never saw the repo stands up end-to-end
-from this doc + README with a green `check` and a routed inbound document.
+- **Template registry** per sub_type (form-ref code, header title, section markers, field labels) derived from the actual form layouts (`generator/forms/generic.py`) and taxonomy schemas
+- **Deterministic, explainable confidence**:
+  - exact `Form Ref: MWS-<TYPE>` hit → 0.95 (the form declares its own type)
+  - title match → 0.60 base + 0.05/section + 0.02/field (cap 0.90)
+  - sections/fields only → 0.30 + 0.05/section + 0.02/field (cap 0.70)
+  - no signals → `None` (falls through to later tiers)
+- **Completeness semantics mirror Tier 1**: missing "Declaration and Signature" → `status: incomplete`, confidence capped at 0.8, RFI note set → item routed to human review
+- **Label-aware field extraction** (policy number, SA ID, client name, amount) — reads values from their labeled lines so a 12-digit ID can't be mistaken for a policy number
+- **Optional OCR hook**: scanned PDFs with no text layer are OCR'd via pytesseract when installed; otherwise reported as no-match (no new hard dependency)
+- **Engine wiring**: `process_inbound` now tries Tier 2 between the QR branch and the page-split fallback; QR path untouched (no regression), Tier 4 path untouched
 
 ## Why
 
-M1's final item, and the product's core sales claim: **data sovereignty — no
-data leaves the local environment.** The checklist turns that claim into a
-verifiable install procedure (firewall/egress sign-off), which is what an
-investor-facing install conversation needs.
+M2's first unchecked task. Legacy forms (no QR) are the highest-volume real-world edge case the existing pipeline handled worst — they fell all the way to the ML model (or `unknown` without one). Tier 2 routes them deterministically from their printed structure, with explainable confidence and HITL semantics.
 
 ## How tested
 
-- **Network-call audit**: grepped `indexer/` for any HTTP/network usage —
-  the routing pipeline (Tier 1 QR, Tier 4 ONNX/TF-IDF, queues, HITL) makes
-  **zero network calls**. The only HTTP client in the repo is
-  `indexer/tiers/baselines.py` (an API-baseline benchmark) and nothing imports
-  it — it is unreferenced/opt-in. The checklist's sovereignty claims are
-  therefore verified against the actual code, not assumed.
-- Every command in the doc was exercised during PRs #3/#5 verification
-  (wheel install, `check`, `config`, `classify`, `ingest-batch` paths,
-  container `--network none` pattern is standard Docker).
-- M1 definition of done: fresh-machine install from the artifact using docs +
-  one command (`pip install …` then `tessera-indexer check`) — all four M1
-  items are now checked off, CI is in place and runs on this PR.
+- `tests/test_tier2.py` (14 tests): every one of the 6 form types matches its template (form-ref hit → ≥0.9, complete); incomplete forms flagged review with capped confidence + RFI note; cover-letter-prepended forms still match (page_count correct); mixed Afrikaans/English still matches; field extraction verified against ground-truth params (policy/ID/name); no-match and weak-evidence cases return None / fall below threshold; title-only scoring; end-to-end engine routing via `tier2_template` with auto-route (0.95 ≥ 0.85).
+- **`test_scenario_d_legacy_form` rewritten**: previously skipped without `models/tier4_model.joblib`; now asserts `method == "tier2_template"`, `sub_type == maintenance_client`, confidence 0.95 — **the legacy-form path no longer depends on the ML model at all**.
+- Full suite: `python -m pytest tests/ -q` → **33 passed, 0 skipped** (was 19+1; scenario D un-skipped, no regressions).
+- Debugging notes: extraction was initially fooled by 12-digit IDs (fixed with label-aware ordering) and case-sensitive label matching (fixed with `re.IGNORECASE`).
 
 ## Notes
 
-- Doc-only PR (~200 lines). No code changes.
-- The `python -c` one-liner in section 4 for copying the example config was
-  tested against the installed wheel (path resolution confirmed in PR #5).
+- Scope: single-form PDFs. Multi-form legacy bulk (no QR) still goes through the existing page-split fallback; Tier 2 for page groups can build on `match_text` in a later pass.
+- OCR path is untested in CI (pytesseract not installed); it degrades to no-match, so it can't break the pipeline.
+- Diff ~430 lines (module + tests + wiring + doc updates).

@@ -92,10 +92,8 @@ def test_scenario_c_incomplete_form(clean_env):
     assert "MISSING" in task["pages"]
 
 def test_scenario_d_legacy_form(clean_env):
-    """Scenario D: Legacy Form (No QR)"""
-    import pytest as _pytest
-    if not os.path.exists("models/tier4_model.joblib"):
-        _pytest.skip("tier4 model not present — train it first via `indexer/tiers/train.py`")
+    """Scenario D: Legacy Form (No QR) — Tier 2 template matching routes it
+    deterministically, no ML model required."""
     param_gen = ParameterGenerator(seed=4)
     form_gen = GenericFormGenerator(output_dir=clean_env)
     engine = RuleEngine()
@@ -107,10 +105,9 @@ def test_scenario_d_legacy_form(clean_env):
     
     result = engine.process_inbound(params["email_id"], "Legacy form attached.", pdf_path)
     
-    assert result["method"] == "tier4_sequence_fallback"
+    assert result["method"] == "tier2_template"
     assert result["tasks"][0]["sub_type"] == "maintenance_client"
-    # Just check that it has a confidence
-    assert result["tasks"][0]["confidence"] > 0
+    assert result["tasks"][0]["confidence"] == 0.95
 
 def test_scenario_e_watcher_mode(clean_env):
     """Scenario E: Watcher Mode (Simulated Live)"""
