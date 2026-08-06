@@ -73,6 +73,14 @@ Follow the [on-prem install checklist](docs/on_prem_install.md) — prerequisite
 model placement, config, one-command verification, and the data-sovereignty
 (firewall/egress) checks that make the product sellable to large investors.
 
+### Pilots
+
+The [pilot runbook](pilot/runbook.md) covers running a pilot against a real
+inbound queue (IMAP watcher or batch replay), the HITL review loop, and the
+measurement report (accuracy, HITL rate, throughput, RFI threshold sweep).
+`pilot/simulate.py` + `pilot/metrics.py` validate the machinery on a synthetic
+stream before business mail is connected.
+
 ### From source (development)
 
 ```bash
