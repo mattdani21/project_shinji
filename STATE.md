@@ -19,6 +19,12 @@ Dormant. Core pipeline works: Tier 1 (QR routing) + Tier 4 (XLM-RoBERTa ONNX, lo
 
 `python3 -m pytest tests/ -q` (from repo root; no CI runs it today)
 
+> Verified 2026-08-06 (orchestrator Step-4): 9 passed, 1 skipped. `test_scenario_d_legacy_form`
+> skips when `models/tier4_model.joblib` is absent — train it via `indexer/tiers/train.py`.
+> Two test-side fixes landed with this PR: `mailbox_watcher` honors a module-level `watch_dir`
+> override, and scenario E scans all queue files (routed items may land in `unknown.jsonl`
+> when the tier-4 model is missing).
+
 ## Run command
 
 `python3 main_demo.py` (README; requires the generated corpus — run `PYTHONPATH=. python3 generator/scale_corpus.py` first if missing)
