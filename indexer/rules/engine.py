@@ -20,7 +20,13 @@ class FormSchema(BaseModel):
     fields: List[SchemaField]
 
 class RuleEngine:
-    def __init__(self, taxonomy_path: str = "taxonomy/taxonomy.yaml", schema_dir: str = "taxonomy/schemas"):
+    def __init__(self, taxonomy_path: Optional[str] = None, schema_dir: Optional[str] = None):
+        # Defaults resolve to the taxonomy bundled with the installed package
+        # (works both from a source checkout and from a wheel install).
+        if taxonomy_path is None:
+            taxonomy_path = str(Path(__file__).resolve().parent.parent / "taxonomy" / "taxonomy.yaml")
+        if schema_dir is None:
+            schema_dir = str(Path(__file__).resolve().parent.parent / "taxonomy" / "schemas")
         self.taxonomy_path = Path(taxonomy_path)
         self.schema_dir = Path(schema_dir)
         self.taxonomy = self._load_yaml(self.taxonomy_path)

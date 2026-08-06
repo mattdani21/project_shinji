@@ -4,11 +4,8 @@ from indexer.rules.engine import RuleEngine
 
 @pytest.fixture
 def rule_engine():
-    # Use paths relative to project root
-    return RuleEngine(
-        taxonomy_path="taxonomy/taxonomy.yaml",
-        schema_dir="taxonomy/schemas"
-    )
+    # Defaults resolve taxonomy from the package (source tree or installed wheel)
+    return RuleEngine()
 
 def test_engine_initialization(rule_engine):
     assert len(rule_engine.schemas) == 6

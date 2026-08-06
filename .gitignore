@@ -2,6 +2,10 @@
 .venv/
 __pycache__/
 *.pyc
+*.egg-info/
+dist/
+build/
+.pytest_cache/
 
 # Data & Models (Keep the structure, but ignore the bulk files)
 data/corpus/
