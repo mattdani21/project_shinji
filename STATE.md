@@ -16,10 +16,11 @@ M2 in progress. Tier 2 (template matching) implemented (`indexer/tiers/tier2.py`
 
 Tier 3 (NER & taxonomy) implemented (`indexer/tiers/tier3.py`): entity extraction (policy/ID/name/amount/date) + weighted keyword classification with Afrikaans coverage, wired into `classify_email` before Tier 4; extracted fields flow into routed tasks (47 passed, 0 skipped).
 
+M2 eval evidence (2026-08-06, 10k corpus `data/corpus_10k/`): body-text accuracy 0.0% (tier4-only baseline, no model installed) → **86.6%** with tier3; auto-route 72.4% at 100% auto-route accuracy. Attachment-aware full pipeline: **100% accuracy**, 97% auto-route, ECE 0.01; tier distribution 8,685 QR / 1,314 tier2 (incl. ~315 QR-scan near-misses caught by tier2) / 1 error. Adversarial suite: **100/100** (was 86/100 before unreadable-attachment handling). Unreadable/blank attachments are no longer dropped silently — body-text fallback + review with RFI (`tier2_unreadable`). Eval harness gained `local_tier4_only` / `local_pipeline` / `local_pipeline_full` modes + `eval/run_comparison.py`; messy generator gained `legacy_form` + `keyword_body` stress modes; adversarial eval records route methods.
+
 ## Broken / incomplete
 
-- Eval harness + adversarial corpus not yet extended for the new tiers
-- No recorded pilot on real inbound documents; demo runs on the synthetic corpus (`main_demo.py` needs `data/corpus_10k/manifest_10k.parquet`)
+- No recorded pilot on real inbound documents; demo runs on the synthetic corpus (`main_demo.py` needs `data/corpus_10k/manifest_10k.parquet` — present locally, gitignored)
 
 ## Blockers
 
@@ -27,13 +28,11 @@ Tier 3 (NER & taxonomy) implemented (`indexer/tiers/tier3.py`): entity extractio
 
 ## Test command
 
-`python3 -m pytest tests/ -q` (from repo root; no CI runs it today)
+`python3 -m pytest tests/ -q` (from repo root; CI runs it on every PR)
 
-> Verified 2026-08-06 (orchestrator Step-4): 9 passed, 1 skipped. `test_scenario_d_legacy_form`
-> skips when `models/tier4_model.joblib` is absent — train it via `indexer/tiers/train.py`.
-> Two test-side fixes landed with this PR: `mailbox_watcher` honors a module-level `watch_dir`
-> override, and scenario E scans all queue files (routed items may land in `unknown.jsonl`
-> when the tier-4 model is missing).
+> Verified 2026-08-06 (autopilot M2): **48 passed, 0 skipped**. Scenario D
+> (legacy form) no longer skips — Tier 2 routes it without any ML model.
+> `models/tier4_model.joblib` is only needed to exercise the TF-IDF path.
 
 ## Run command
 
