@@ -10,10 +10,17 @@ The indexing pipeline is managed by a **Rule Engine** (`indexer/rules/engine.py`
 
 1.  **Tier 1: Deterministic Metadata Extraction (QR Codes)**
     Scans PDF attachments for QR codes. If a valid, complete form is found, it routes instantly with 100% confidence. Also detects "Broker Bulk" submissions containing multiple forms.
-2.  **Tier 2: OCR & Template Matching** *(Stubbed)*
-    Designed for standard forms lacking QR codes but having known visual structures.
-3.  **Tier 3: Named Entity Recognition (NER) & Taxonomy** *(Stubbed)*
-    Looks for specific keywords, policy numbers, or ID numbers in unstructured text.
+2.  **Tier 2: OCR & Template Matching**
+    Routes legacy forms without QR codes by matching their printed structure
+    (form-ref codes, header titles, section markers, field labels) against a
+    template registry — deterministic, explainable confidence, with
+    completeness semantics (unsigned forms go to human review with an RFI
+    note). Scanned PDFs are handled by an optional pytesseract OCR hook.
+3.  **Tier 3: Named Entity Recognition (NER) & Taxonomy**
+    Extracts policy numbers, SA ID numbers, client names and amounts from
+    unstructured text, and classifies the form type from weighted keyword
+    evidence (the taxonomy), including Afrikaans coverage — a cheap
+    deterministic tier that runs before the ML fallback.
 4.  **Tier 4: Deep Learning Classification (XLM-RoBERTa)**
     The final safety net for entirely unstructured, messy, or ambiguous emails. Uses a fine-tuned XLM-RoBERTa model running locally via ONNX to classify the intent of the email body. It includes a TF-IDF fallback if the ONNX model is unavailable.
 

@@ -7,6 +7,7 @@ import re
 from indexer.tiers.tier4 import Tier4Classifier
 from indexer.tiers.tier1_qr import Tier1QRRouter
 from indexer.tiers.tier2 import Tier2TemplateMatcher
+from indexer.tiers.tier3 import Tier3NERExtractor
 from indexer.config import IndexerConfig, coerce_config
 
 class SchemaField(BaseModel):
@@ -42,6 +43,7 @@ class RuleEngine:
         # Initialize Tiers
         self.tier1 = Tier1QRRouter()
         self.tier2 = Tier2TemplateMatcher()
+        self.tier3 = Tier3NERExtractor()
         
         try:
             self.tier4 = Tier4Classifier(config=self.config)
@@ -167,7 +169,8 @@ class RuleEngine:
                 sub_type=body_result.get("prediction", "unknown"),
                 pages="body_only",
                 confidence=body_result.get("confidence", 0.0),
-                source_attachment=""
+                source_attachment="",
+                extracted_fields=body_result.get("extracted_fields", {})
             )
             queue = wq.route(item)
             
@@ -356,6 +359,13 @@ class RuleEngine:
                     "confidence": 1.0,
                     "method": "deterministic_qr"
                 }
+
+        # Tier 3: NER + keyword/taxonomy evidence (cheap, deterministic)
+        if self.tier3:
+            tier3_result = self.tier3.classify(text)
+            if tier3_result is not None:
+                tier3_result["method"] = "local_ner_keyword"
+                return tier3_result
 
         if self.tier4:
             result = self.tier4.predict(text)
