@@ -43,7 +43,7 @@ class RuleEngine:
         # Initialize Tiers
         self.tier1 = Tier1QRRouter()
         self.tier2 = Tier2TemplateMatcher()
-        self.tier3 = Tier3NERExtractor()
+        self.tier3: Optional[Tier3NERExtractor] = Tier3NERExtractor()
         
         try:
             self.tier4 = Tier4Classifier(config=self.config)
@@ -273,6 +273,39 @@ class RuleEngine:
                     "method": "tier2_template",
                 }
 
+            # 2.5. Attachment with no readable text: never drop silently.
+            # Classify from the body as a best-effort prediction, cap the
+            # confidence, and route to human review with an RFI note.
+            if not self._pdf_has_text(str(attachment_path)):
+                body_result = self.classify_email(body_text)
+                prediction = body_result.get("prediction", "unknown")
+                item = WorkQueueItem(
+                    email_id=email_id,
+                    task_id=f"{email_id}_task_1",
+                    policy_number=extract_policy_number(body_text),
+                    client_name=extract_client_name(body_text),
+                    main_type=prediction,
+                    sub_type=prediction,
+                    pages="unreadable",
+                    confidence=min(float(body_result.get("confidence", 0.0)), 0.5),
+                    source_attachment=str(attachment_path),
+                    extracted_fields=body_result.get("extracted_fields", {}),
+                )
+                item.status = "review"
+                item.extracted_fields["rfi_reason"] = (
+                    "Attachment contains no readable text (blank or scanned image). "
+                    "Routed on email body text only — verify the attachment manually."
+                )
+                queue = wq.route(item)
+                task_dict = item.to_dict()
+                task_dict["routed_to"] = queue
+                return {
+                    "type": "single",
+                    "total_tasks": 1,
+                    "tasks": [task_dict],
+                    "method": "tier2_unreadable",
+                }
+
             # 3. Fallback to Page-by-Page Sequence Splitting (Original Tier 4 logic)
             import pypdf
             reader = pypdf.PdfReader(attachment_path)
@@ -345,6 +378,18 @@ class RuleEngine:
             
         except Exception as e:
             return {"type": "error", "message": f"Failed to parse PDF: {str(e)}"}
+
+    def _pdf_has_text(self, pdf_path: str) -> bool:
+        """True when any page of the PDF has extractable text (no OCR)."""
+        try:
+            import fitz
+            doc = fitz.open(pdf_path)
+            try:
+                return any((page.get_text() or "").strip() for page in doc)
+            finally:
+                doc.close()
+        except Exception:
+            return False
 
     def classify_email(self, text: str, attachments: List[str] = []) -> Dict[str, Any]:
         """

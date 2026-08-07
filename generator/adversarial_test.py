@@ -250,6 +250,7 @@ def run_adversarial_eval(test_dir: str = "data/adversarial_test"):
             "prediction": prediction,
             "confidence": confidence,
             "is_correct": is_correct,
+            "route_method": out.get("method", "error") if out["type"] != "error" else "error",
             "notes": row["notes"]
         })
         
