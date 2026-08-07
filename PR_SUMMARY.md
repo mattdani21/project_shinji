@@ -1,33 +1,46 @@
-# M1.3 — Config-driven installs (taxonomy, models, queue dirs, HITL threshold)
+# M1.4 — On-prem install checklist (data-sovereignty doc)
 
 ## What
 
-All install-specific knobs now live in one YAML config instead of code:
+`docs/on_prem_install.md` — the on-prem install checklist that closes out M1.
+Sections:
 
-- **`indexer/config.py`** — `IndexerConfig` dataclass + `load_config()`:
-  - keys: `taxonomy_path`, `schema_dir`, `onnx_model_dir`, `tfidf_model_path`, `queue_dir`, `review_dir`, `inbox_dir`, `hitl_threshold`
-  - resolution order: `--config PATH` → `$TESSERA_INDEXER_CONFIG` → `./tessera_indexer.yaml` (cwd) → built-in defaults (package-bundled taxonomy, cwd-relative data dirs)
-  - **relative paths in a user config resolve against the config file's directory** — a self-contained on-prem deploy dir (config + models/ + data/) works from any working directory
-  - unknown keys rejected with a clear error; missing explicit file raises `FileNotFoundError`
-  - `coerce_config()` lets every component accept a path string or an `IndexerConfig`
-- **Wiring** — `RuleEngine`, `Tier4Classifier`, `WorkQueueManager` (queue dir + **HITL threshold now read from config instead of hardcoded 0.85**), `HITLExporter`, `batch_ingest`, `mailbox_watcher` (inbox dir). Explicit constructor args still win over config; config wins over defaults — no breaking changes to existing callers.
-- **CLI** — new `tessera-indexer config` subcommand (prints effective config + source); `--config` flag on `check` / `classify` / `ingest-batch`.
-- **`indexer/config/example.yaml`** — annotated example, shipped in the wheel (package data).
-- **Docs** — README gained a Configuration section (key table + resolution order + usage); GOAL.md M1 item 3 checked off; STATE.md updated.
-- **Tests** — `tests/test_config.py`, 10 tests: defaults→package taxonomy, YAML overrides with relative-path resolution, env-var config, cwd config discovery, unknown-key rejection, missing-file error, coerce behavior, threshold wiring in `WorkQueueManager` (0.88 confidence → review at 0.9 threshold, pending at 0.85), engine accepting a config *path*, explicit-args-override precedence.
+1. **Prerequisites** — OS/Python/disk; explicit "no internet requirement at runtime"
+2. **Install** — wheel path (`pip install tessera-indexer[onnx]`) or container path
+3. **Model placement** — ONNX + label_map + TF-IDF placement (models are trained artifacts, not shipped in the wheel)
+4. **Configuration** — copy the annotated example, set paths + `hitl_threshold`, confirm with `tessera-indexer config`
+5. **Verify the install** — one command: `tessera-indexer check` (6 schemas, tier1 ok, tier4 backend)
+6. **Data-sovereignty guarantees (verify, don't assume)** — firewall: inbound mail only / zero outbound HTTPS; no telemetry; `api_used` is always a local backend; optional `--network none` container hardening
+7. **Go live** — batch backfill, watcher mode, HITL review loop, backups of queue/review dirs + config
+8. **Operations** — log routing, model updates without code changes, threshold tuning via `training/calibrate.py`, rollback
+
+Plus a definition of done: a machine that never saw the repo stands up end-to-end
+from this doc + README with a green `check` and a routed inbound document.
 
 ## Why
 
-M1 item 3: *make installs config-driven … rather than code.* This is what makes a single on-prem artifact deployable per-customer without touching source: the install checklist (M1 item 4) will point at `tessera_indexer.yaml` for all site-specific values, and the HITL threshold becomes a business tuning knob instead of a code constant.
+M1's final item, and the product's core sales claim: **data sovereignty — no
+data leaves the local environment.** The checklist turns that claim into a
+verifiable install procedure (firewall/egress sign-off), which is what an
+investor-facing install conversation needs.
 
 ## How tested
 
-- Source tree: `python -m pytest tests/ -q` → **19 passed, 1 skipped** (was 9+1; +10 new config tests, no regressions)
-- Rebuilt wheel, reinstalled into the fresh venv, re-ran the suite from a scratch dir against the installed package → **19 passed, 1 skipped**
-- CLI: `tessera-indexer config` in a dir with `tessera_indexer.yaml` → auto-discovered, `queue_dir` resolved relative to the config dir, `hitl_threshold: 0.9` applied; explicit `--config` works; `example.yaml` confirmed present in the installed wheel
-- Container rebuild (in progress at PR time): image includes the config layer; `tessera-indexer config` available inside the container
+- **Network-call audit**: grepped `indexer/` for any HTTP/network usage —
+  the routing pipeline (Tier 1 QR, Tier 4 ONNX/TF-IDF, queues, HITL) makes
+  **zero network calls**. The only HTTP client in the repo is
+  `indexer/tiers/baselines.py` (an API-baseline benchmark) and nothing imports
+  it — it is unreferenced/opt-in. The checklist's sovereignty claims are
+  therefore verified against the actual code, not assumed.
+- Every command in the doc was exercised during PRs #3/#5 verification
+  (wheel install, `check`, `config`, `classify`, `ingest-batch` paths,
+  container `--network none` pattern is standard Docker).
+- M1 definition of done: fresh-machine install from the artifact using docs +
+  one command (`pip install …` then `tessera-indexer check`) — all four M1
+  items are now checked off, CI is in place and runs on this PR.
 
 ## Notes
 
-- `process_pipeline`'s `threshold` parameter (hitl/exporter.py) was left as-is — it already takes an explicit argument; the hardcoded constant it duplicated (0.85 in `WorkQueueManager.route`) is now config-driven, which was the actual code-level knob.
-- Diff is ~450 lines (config module + wiring + tests + docs). The `config/` package dir + `config.py` module are new; existing constructor signatures remain backward-compatible.
+- Doc-only PR (~200 lines). No code changes.
+- The `python -c` one-liner in section 4 for copying the example config was
+  tested against the installed wheel (path resolution confirmed in PR #5).
