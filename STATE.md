@@ -8,10 +8,12 @@ Packaged as an installable wheel (`tessera-indexer`, pyproject.toml, pinned comp
 
 CI added (`.github/workflows/ci.yml`): runs the full suite on every PR/push to main across Python 3.9 / 3.11 / 3.12 (editable `[dev]` install), plus a wheel-build check.
 
+Installs are config-driven (`indexer/config.py`): one YAML file controls taxonomy/schema paths, ONNX + TF-IDF model paths, queue/review/inbox dirs, and the HITL confidence threshold. Resolution: `--config` → `$TESSERA_INDEXER_CONFIG` → `./tessera_indexer.yaml` → built-in defaults; relative paths resolve against the config file's directory. CLI gained `config` (print effective config) and `--config` on all subcommands; annotated example ships in the wheel (`indexer/config/example.yaml`).
+
 ## Broken / incomplete
 
 - Tier 2 (OCR & template matching) and Tier 3 (NER & taxonomy) are stubbed: README marks them "Stubbed" and `indexer/tiers/` contains only `tier1_qr.py`, `tier4.py`, `baselines.py`, `train.py`
-- Installs are not yet config-driven: taxonomy/model/queue paths and the HITL confidence threshold are still hardcoded defaults (overridable via constructor args only)
+- On-prem install checklist (M1, final item) not yet written
 - No recorded pilot on real inbound documents; demo runs on the synthetic corpus (`main_demo.py` needs `data/corpus_10k/manifest_10k.parquet`)
 
 ## Blockers

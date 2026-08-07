@@ -66,4 +66,4 @@ tessera-indexer = "indexer.cli:main"
 include = ["indexer*", "generator*"]
 
 [tool.setuptools.package-data]
-indexer = ["taxonomy/*.yaml", "taxonomy/schemas/*.yaml"]
+indexer = ["taxonomy/*.yaml", "taxonomy/schemas/*.yaml", "config/*.yaml"]

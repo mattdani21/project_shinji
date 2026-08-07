@@ -16,7 +16,7 @@ import datetime
 from typing import Optional
 
 
-def batch_ingest(input_dir: str, engine=None):
+def batch_ingest(input_dir: str, engine=None, config=None):
     """
     Batch Mode: Scan a directory for email bodies and their PDF attachments.
     
@@ -28,7 +28,7 @@ def batch_ingest(input_dir: str, engine=None):
     """
     if engine is None:
         from indexer.rules.engine import RuleEngine
-        engine = RuleEngine()
+        engine = RuleEngine(config=config)
         
     body_files = sorted(glob.glob(os.path.join(input_dir, "*_body.txt")))
     
@@ -61,7 +61,7 @@ def batch_ingest(input_dir: str, engine=None):
         
     # Print summary
     from indexer.workqueue import WorkQueueManager
-    wq = WorkQueueManager()
+    wq = WorkQueueManager(config=config)
     stats = wq.get_stats()
     
     print(f"\n=== Batch Complete: {len(body_files)} emails processed ===")
@@ -74,7 +74,7 @@ def batch_ingest(input_dir: str, engine=None):
 
 def mailbox_watcher(host: str, email: str, password: str, 
                     folder: str = "INBOX", poll_interval: int = 30,
-                    engine=None):
+                    engine=None, config=None):
     """
     Watcher Mode: Connect to an IMAP mailbox, poll for new emails, 
     and process them as they arrive.
@@ -90,7 +90,7 @@ def mailbox_watcher(host: str, email: str, password: str,
     
     if engine is None:
         from indexer.rules.engine import RuleEngine
-        engine = RuleEngine()
+        engine = RuleEngine(config=config)
     
     # In a real implementation, this would be:
     #   import imaplib
@@ -100,7 +100,9 @@ def mailbox_watcher(host: str, email: str, password: str,
     #
     # For the demo, we simulate by watching a local directory.
     # Honor a module-level override (tests set indexer.ingest.watch_dir).
-    watch_dir = globals().get("watch_dir") or "data/inbox"
+    from indexer.config import load_config
+    effective = load_config()
+    watch_dir = globals().get("watch_dir") or effective.inbox_dir
     os.makedirs(watch_dir, exist_ok=True)
     processed = set()
     

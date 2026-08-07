@@ -76,9 +76,37 @@ Requires Python 3.9+.
 
 ```bash
 tessera-indexer check          # smoke-test an install: taxonomy, tiers, models
+tessera-indexer config         # print the effective configuration
 tessera-indexer classify --file email_body.txt   # route one email body (JSON)
 tessera-indexer ingest-batch /path/to/inbox      # batch-process a directory
 tessera-indexer --version
+```
+
+### Configuration
+
+Installs are config-driven. All paths and the HITL threshold live in one YAML
+file instead of code:
+
+| Key | Default | Meaning |
+|---|---|---|
+| `taxonomy_path` | bundled with wheel | taxonomy YAML |
+| `schema_dir` | bundled with wheel | form schemas |
+| `onnx_model_dir` | `models/tessera-encoder-v1` | deep-learning Tier 4 model |
+| `tfidf_model_path` | `models/tier4_model.joblib` | TF-IDF fallback model |
+| `queue_dir` | `data/workqueues` | routed work-queue files |
+| `review_dir` | `data/human_review` | HITL review exports |
+| `inbox_dir` | `data/inbox` | watcher-mode inbox |
+| `hitl_threshold` | `0.85` | below this confidence → human review |
+
+Resolution order: `--config PATH` → `$TESSERA_INDEXER_CONFIG` →
+`./tessera_indexer.yaml` (working dir) → built-in defaults. **Relative paths
+resolve against the config file's directory**, so a self-contained deploy dir
+(config + models/ + data/) works from any working directory. An annotated
+example ships in the wheel at `indexer/config/example.yaml`.
+
+```bash
+tessera-indexer config --config /path/to/tessera_indexer.yaml   # inspect effective config
+tessera-indexer check --config /path/to/tessera_indexer.yaml    # verify an install
 ```
 
 ### Running the Demo (from source)

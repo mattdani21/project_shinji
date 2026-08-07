@@ -2,13 +2,18 @@ import os
 import shutil
 import json
 import pandas as pd
+from typing import Optional
 
 class HITLExporter:
     """
     Handles routing of low-confidence predictions to human review.
     """
-    def __init__(self, review_dir: str = "data/human_review"):
-        self.review_dir = review_dir
+    def __init__(self, review_dir: Optional[str] = None, config=None):
+        from indexer.config import coerce_config
+        config = coerce_config(config)
+        if config is not None:
+            review_dir = review_dir or config.review_dir
+        self.review_dir = review_dir or "data/human_review"
         os.makedirs(self.review_dir, exist_ok=True)
         self.manifest_path = os.path.join(self.review_dir, "review_manifest.jsonl")
 
