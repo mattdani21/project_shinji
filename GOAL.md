@@ -29,7 +29,7 @@ Sell large-scale email-indexing installs to large investors (Tessera AI Indexer 
 
 ### M4 — Sales materials
 
-- [ ] One-page product brief: multi-tier routing (QR → OCR → NER → XLM-RoBERTa ONNX), 100% data sovereignty, HITL review, on-prem installs
-- [ ] Demo script + calibrated metrics from the pilot (`eval/reports/`)
-- [ ] Packaging/pricing options for installs (per-queue, per-install)
-*Definition of done:* A sales-ready package (brief, demo, metrics) that an investor conversation can close from.
+- [x] One-page product brief: multi-tier routing (QR → OCR → NER → XLM-RoBERTa ONNX), 100% data sovereignty, HITL review, on-prem installs — `sales/one_pager.md`
+- [x] Demo script + calibrated metrics from the pilot (`eval/reports/`) — `sales/demo_script.md` + `sales/metrics_snapshot.md` (all figures reproducible in-repo; real-pilot numbers pending M3)
+- [x] Packaging/pricing options for installs (per-queue, per-install) — `sales/pricing.md` (draft options, owner to confirm)
+*Definition of done:* A sales-ready package (brief, demo, metrics) that an investor conversation can close from. — met for synthetic-data metrics; real-mail metrics swap in when M3 pilot runs.

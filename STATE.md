@@ -20,9 +20,12 @@ M2 eval evidence (2026-08-06, 10k corpus `data/corpus_10k/`): body-text accuracy
 
 M3 pilot machinery delivered (`pilot/`): `simulate.py` (timed inbound stream through the real ingest→route→HITL loop), `metrics.py` (accuracy / HITL rate / latency / queue distribution / RFI threshold sweep / sovereignty check), `runbook.md` (how to run a real pilot on business mail). **Simulated pilot (600 emails, 2026-08-06): 100% accuracy, 5.7% HITL rate, 153 ms avg latency, sovereignty OK; threshold sweep: 0.70–0.80 gives 97.7% auto-route at 100% auto-route accuracy (better operating point than default 0.85 → 94.3%).** Real-data pilot pending owner access to business mail.
 
+M4 sales package delivered (`sales/`): one-pager, scripted demo (runnable, with expected outputs), calibrated metrics snapshot (sources + reproduce commands), pricing options draft (per-install / per-queue / volume, owner to confirm). Honest framing: metrics are synthetic-corpus + simulated-pilot; real-mail numbers slot in when M3 pilot runs.
+
 ## Broken / incomplete
 
 - Real-data pilot (M3 item 1) — needs business-mail access; runbook + machinery ready
+- Sales pricing is draft options — owner decision pending
 - No recorded pilot on real inbound documents; demo runs on the synthetic corpus (`main_demo.py` needs `data/corpus_10k/manifest_10k.parquet` — present locally, gitignored)
 
 ## Blockers
