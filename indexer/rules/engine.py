@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 import re
 from indexer.tiers.tier4 import Tier4Classifier
 from indexer.tiers.tier1_qr import Tier1QRRouter
+from indexer.tiers.tier2 import Tier2TemplateMatcher
 from indexer.config import IndexerConfig, coerce_config
 
 class SchemaField(BaseModel):
@@ -40,6 +41,7 @@ class RuleEngine:
         
         # Initialize Tiers
         self.tier1 = Tier1QRRouter()
+        self.tier2 = Tier2TemplateMatcher()
         
         try:
             self.tier4 = Tier4Classifier(config=self.config)
@@ -231,7 +233,44 @@ class RuleEngine:
                     "method": "tier1_qr_deterministic"
                 }
 
-            # 2. Fallback to Page-by-Page Sequence Splitting (Original Tier 4 logic)
+            # 2. Tier 2: template matching for legacy forms (no QR codes)
+            tier2_result = None
+            try:
+                tier2_result = self.tier2.match_pdf(str(attachment_path))
+            except Exception as e:
+                print(f"Tier 2 matching failed: {e}")
+
+            if tier2_result is not None:
+                sub_type = tier2_result["sub_type"]
+                fields = tier2_result.get("extracted_fields", {})
+
+                item = WorkQueueItem(
+                    email_id=email_id,
+                    task_id=f"{email_id}_task_1",
+                    policy_number=fields.get("policy_number", "UNKNOWN"),
+                    client_name=fields.get("client_name", "Unknown Client"),
+                    main_type=sub_type,
+                    sub_type=sub_type,
+                    pages=f"1-{tier2_result.get('page_count', 1)}",
+                    confidence=tier2_result["confidence"],
+                    source_attachment=str(attachment_path),
+                    extracted_fields=fields,
+                )
+                if tier2_result.get("status") == "incomplete":
+                    item.status = "review"
+                    item.extracted_fields["rfi_reason"] = tier2_result.get("rfi_note", "")
+
+                queue = wq.route(item)
+                task_dict = item.to_dict()
+                task_dict["routed_to"] = queue
+                return {
+                    "type": "single",
+                    "total_tasks": 1,
+                    "tasks": [task_dict],
+                    "method": "tier2_template",
+                }
+
+            # 3. Fallback to Page-by-Page Sequence Splitting (Original Tier 4 logic)
             import pypdf
             reader = pypdf.PdfReader(attachment_path)
             
