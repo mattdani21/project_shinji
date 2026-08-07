@@ -1,41 +1,27 @@
-# M3 — Pilot machinery + simulated pilot + findings fixes
+# M4 — Sales-ready package (brief, demo, metrics, pricing)
 
 ## What
 
-The pilot install milestone, prepared and partially executed:
+The investor-conversation package, all grounded in the repo's verified numbers:
 
-**`pilot/simulate.py`** — timed inbound-stream simulation through the **real** ingest → route → HITL loop: samples the generated corpus (+ all adversarial edge cases) into an inbox in waves with inter-arrival pacing, runs `RuleEngine.process_inbound` per email (the same path the watcher/batch ingest uses), records prediction/confidence/method/status/latency/routed_to per email.
-
-**`pilot/metrics.py`** — the M3 DoD measurement report:
-- routing accuracy (overall + by diversity)
-- HITL rate (share to human review)
-- avg per-email latency + queue distribution (throughput proxy)
-- **RFI threshold sweep** (0.70–0.95): auto-route % vs auto-route accuracy — the business tuning knob
-- data-sovereignty confirmation (every route method must be a local backend)
-
-**`pilot/runbook.md`** — how to run the pilot on a **real** inbound queue: ingest modes (IMAP watcher / batch replay), HITL review loop with override-as-ground-truth, measurement path, findings loop, exit criteria.
-
-**Findings from the simulated pilot, fixed back into `indexer/`:**
-1. **Flaky QR scan could kill an inbound** — one `cv2` QR-detection failure on a render made `process_inbound` return `error` (1/10,000 in the M2 eval; non-reproducible on re-run). Tier 1 scan failures now fall through to Tier 2 instead of erroring. Stress-tested 25/25 clean.
-2. **Body-only routes were invisible to monitoring** — the body-only branch returned no `method`, so pilots/eval saw "unknown" and sovereignty checks flagged it. Now returns `body_only_classify` + `tier`.
+- **`sales/one_pager.md`** — one-page product brief: the problem (manual triage at scale), the four-tier routing solution (QR → template/OCR → NER → XLM-RoBERTa ONNX), the 100% data-sovereignty guarantee (zero network calls, verified; firewall/egress sign-off), HITL safety net with RFI reasons, calibrated proof table, and the offer (on-prem installs + measured pilot path).
+- **`sales/demo_script.md`** — a 10-minute scripted demo, every command the real product: install check → QR auto-route → legacy no-QR (tier 2) → messy body-only (tier 3) → HITL review queue → live sovereignty proof (`lsof` during ingest) → the numbers. Expected outputs included, plus a close ("we run the pilot on their mail, inside their infra").
+- **`sales/metrics_snapshot.md`** — every claim with its source file and reproduce command: 99.99% attachment-aware accuracy (10k corpus, with the 1 flaky-QR failure disclosed + the fix), 97.3% auto-route at 100% HC accuracy, ECE 0.011, adversarial 100/100, simulated pilot 600 emails (100%, 5.7% HITL, 153 ms), RFI threshold sweep (0.70–0.80 recommended), sovereignty audit, test health (50 passed).
+- **`sales/pricing.md`** — three packaging models (per-install license, per-queue subscription, volume-tiered) with USD anchors, a recommended go-to-market stack (paid pilot → per-queue/per-install), discount levers, and what would change the numbers. **Stakes flagged**: pricing is a draft for owner confirmation, not a commitment.
+- **`sales/README.md`** — index + the one-line story.
 
 ## Why
 
-M3's DoD needs a documented accuracy/HITL/throughput report with local inference. Business mail isn't available to the autopilot, so the machinery was built, validated on a 600-email simulated stream, and handed off with a runbook — the real pilot is one config + one command away.
+M4's DoD: a sales-ready package an investor conversation can close from. The brief/demo/metrics exist and are reproducible; pricing options are drafted per the roadmap item. Honest caveat carried throughout: metrics are synthetic-corpus + simulated-pilot until the M3 real-mail pilot runs.
 
-## How tested — simulated pilot results (600 emails: 500 corpus + 100 adversarial, 2026-08-06)
+## How tested
 
-- **Routing accuracy: 100.0% (600/600)** — every diversity slice 100% (clean, legacy, afrikaans, cover_letter, broker_bulk, incomplete, mismatch, body_only)
-- **HITL rate: 5.7%** (34 emails to human review — the genuinely low-confidence/unreadable ones)
-- **Avg per-email latency: 153 ms** (161 ms first run)
-- **Queue distribution**: policy_admin 73.5%, new_business 16.7%, claims 9.8% (broker bulk decomposes into per-client team tasks)
-- **Route methods**: tier1 QR 81.3%, tier2 template 14.7%, tier2 unreadable 2.3%, body-only classify 1.7%
-- **Data sovereignty: OK** — all methods local
-- **RFI threshold sweep**: 0.70–0.80 → **97.7% auto-route at 100% auto-route accuracy** (recommended operating point; default 0.85 gives 94.3%)
-- Full suite: **50 passed, 0 skipped** (incl. new pilot-metrics tests)
+- Every figure re-read from its artifact immediately before writing: `data/runs/local_pipeline_full_results.json` (0.9999 acc, 0.9727 auto-route, 1.0 HC acc, ECE 0.0108, dist {0:1, 1:8685, 2:1314}), `data/runs/local_pipeline_results.json` (0.866), `data/adversarial_test/adversarial_results.csv` (1.0 all categories), `pilot/reports/pilot_sim_results.csv` (600/600, 5.7%, 153.4 ms), threshold sweep from `pilot/metrics.py`.
+- The 1/10,000 failure is disclosed in the snapshot and tied to the already-merged fix (QR flake falls through to tier 2; 25/25 re-run clean).
+- Demo commands are the actual CLI/scripts (checked against the installed wheel + source checkout).
+- Suite: 50 passed, 0 skipped (unchanged — docs-only PR).
 
 ## Notes
 
-- `data/corpus_10k/`, `pilot/reports/` (csv/md) are gitignored; the report contents are recorded in STATE.md and this summary.
-- Remaining M3 work needs owner access to real business mail — flagged in the handoff, not blocked: `pilot/runbook.md` is the path.
-- Diff ~600 lines (pilot machinery + engine fixes + tests + docs).
+- Diff is ~900 lines of sales docs; no code changes.
+- Remaining before an investor-ready demo with real numbers: M3 real pilot (business mail) — the package is built so the metrics snapshot is the only page that changes.
