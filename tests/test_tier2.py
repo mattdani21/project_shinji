@@ -108,3 +108,27 @@ def test_engine_routes_legacy_form_via_tier2(form_env):
     assert task["sub_type"] == "claim_retirement"
     assert task["status"] == "pending"  # 0.95 >= 0.85 -> auto-routed
     assert task["policy_number"] == params["policy_number"]
+
+
+def test_unreadable_attachment_routes_to_review_with_rfi(tmp_path):
+    """A blank PDF must never be dropped silently: body fallback + review."""
+    from indexer.rules.engine import RuleEngine
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import A4
+
+    blank_pdf = str(tmp_path / "blank.pdf")
+    c = canvas.Canvas(blank_pdf, pagesize=A4)
+    c.showPage()
+    c.save()
+
+    body = ("Good day,\n\nI would like to request a partial withdrawal from my "
+            "policy POL-77777777. The signed form is attached.\n\nRegards,\nJane Doe")
+    engine = RuleEngine()
+    out = engine.process_inbound("blank_attach", body, blank_pdf)
+    assert out["type"] == "single"
+    assert out["method"] == "tier2_unreadable"
+    task = out["tasks"][0]
+    assert task["status"] == "review"
+    assert task["sub_type"] == "repurchase"  # body fallback via tier3
+    assert task["confidence"] <= 0.5
+    assert "no readable text" in task["extracted_fields"]["rfi_reason"]
