@@ -6,15 +6,23 @@ import numpy as np
 from typing import Dict, Any, Optional
 
 class Tier4Classifier:
-    """
-    Tier 4: Local ML Fallback.
+    """Tier 4: Local ML Fallback.
     Supports both:
     1. Fast TF-IDF + Naive Bayes (joblib)
     2. Deep XLM-RoBERTa (ONNX) for higher accuracy
     """
     def __init__(self, 
-                 onnx_model_dir: str = "models/tessera-encoder-v1",
-                 tfidf_model_path: str = "models/tier4_model.joblib"):
+                 onnx_model_dir: Optional[str] = None,
+                 tfidf_model_path: Optional[str] = None,
+                 config=None):
+        
+        from indexer.config import coerce_config
+        config = coerce_config(config)
+        if config is not None:
+            onnx_model_dir = onnx_model_dir or config.onnx_model_dir
+            tfidf_model_path = tfidf_model_path or config.tfidf_model_path
+        onnx_model_dir = onnx_model_dir or "models/tessera-encoder-v1"
+        tfidf_model_path = tfidf_model_path or "models/tier4_model.joblib"
         
         self.onnx_session = None
         self.tokenizer = None
