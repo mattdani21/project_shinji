@@ -34,5 +34,8 @@ implementation_plan.md.resolved
 # Pilot artifacts (simulated streams + reports)
 pilot/reports/
 
+# Mini demo run artifacts
+demo/run/
+
 # OS
 .DS_Store
