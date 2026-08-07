@@ -31,5 +31,8 @@ models/tessera-encoder-v1/model.onnx.data
 confusion_matrix.png
 implementation_plan.md.resolved
 
+# Pilot artifacts (simulated streams + reports)
+pilot/reports/
+
 # OS
 .DS_Store

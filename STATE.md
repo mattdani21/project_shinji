@@ -18,8 +18,11 @@ Tier 3 (NER & taxonomy) implemented (`indexer/tiers/tier3.py`): entity extractio
 
 M2 eval evidence (2026-08-06, 10k corpus `data/corpus_10k/`): body-text accuracy 0.0% (tier4-only baseline, no model installed) → **86.6%** with tier3; auto-route 72.4% at 100% auto-route accuracy. Attachment-aware full pipeline: **100% accuracy**, 97% auto-route, ECE 0.01; tier distribution 8,685 QR / 1,314 tier2 (incl. ~315 QR-scan near-misses caught by tier2) / 1 error. Adversarial suite: **100/100** (was 86/100 before unreadable-attachment handling). Unreadable/blank attachments are no longer dropped silently — body-text fallback + review with RFI (`tier2_unreadable`). Eval harness gained `local_tier4_only` / `local_pipeline` / `local_pipeline_full` modes + `eval/run_comparison.py`; messy generator gained `legacy_form` + `keyword_body` stress modes; adversarial eval records route methods.
 
+M3 pilot machinery delivered (`pilot/`): `simulate.py` (timed inbound stream through the real ingest→route→HITL loop), `metrics.py` (accuracy / HITL rate / latency / queue distribution / RFI threshold sweep / sovereignty check), `runbook.md` (how to run a real pilot on business mail). **Simulated pilot (600 emails, 2026-08-06): 100% accuracy, 5.7% HITL rate, 153 ms avg latency, sovereignty OK; threshold sweep: 0.70–0.80 gives 97.7% auto-route at 100% auto-route accuracy (better operating point than default 0.85 → 94.3%).** Real-data pilot pending owner access to business mail.
+
 ## Broken / incomplete
 
+- Real-data pilot (M3 item 1) — needs business-mail access; runbook + machinery ready
 - No recorded pilot on real inbound documents; demo runs on the synthetic corpus (`main_demo.py` needs `data/corpus_10k/manifest_10k.parquet` — present locally, gitignored)
 
 ## Blockers
