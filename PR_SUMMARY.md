@@ -1,33 +1,26 @@
-# M2.1 — Tier 2: OCR & template matching for legacy (QR-less) forms
+# M2.2 — Tier 3: NER & taxonomy for unstructured text
 
 ## What
 
-`indexer/tiers/tier2.py` — `Tier2TemplateMatcher`, the first piece of M2:
+`indexer/tiers/tier3.py` — `Tier3NERExtractor`:
 
-- **Template registry** per sub_type (form-ref code, header title, section markers, field labels) derived from the actual form layouts (`generator/forms/generic.py`) and taxonomy schemas
-- **Deterministic, explainable confidence**:
-  - exact `Form Ref: MWS-<TYPE>` hit → 0.95 (the form declares its own type)
-  - title match → 0.60 base + 0.05/section + 0.02/field (cap 0.90)
-  - sections/fields only → 0.30 + 0.05/section + 0.02/field (cap 0.70)
-  - no signals → `None` (falls through to later tiers)
-- **Completeness semantics mirror Tier 1**: missing "Declaration and Signature" → `status: incomplete`, confidence capped at 0.8, RFI note set → item routed to human review
-- **Label-aware field extraction** (policy number, SA ID, client name, amount) — reads values from their labeled lines so a 12-digit ID can't be mistaken for a policy number
-- **Optional OCR hook**: scanned PDFs with no text layer are OCR'd via pytesseract when installed; otherwise reported as no-match (no new hard dependency)
-- **Engine wiring**: `process_inbound` now tries Tier 2 between the QR branch and the page-split fallback; QR path untouched (no regression), Tier 4 path untouched
+- **Entity extraction** (`extract(text)`): policy number (label-aware + POL- patterns), SA ID number (13-digit), client name (email closing line), amounts (R …), dates (ISO). Label-aware so a 12-digit ID can't be mistaken for a policy number.
+- **Keyword/taxonomy classification** (`classify(text)`): weighted keyword evidence per sub_type — strong phrases (weight 2, distinctive: "death claim", "premium adjustment", "onttrekking"…) and weak words (weight 1) — drawn from the taxonomy labels and the actual corpus language, with **Afrikaans coverage** (onttrekking, adres verander, premie verhoog, aftrede, sterfte, nuwe besigheid).
+- **Explainable confidence**: `min(0.95, 0.40 + 0.12 * weighted_hits)`; returns `None` with zero evidence so Tier 4 takes over; `evidence` dict explains every hit.
+- **Engine wiring**: `classify_email` runs Tier 3 between Tier 1 (QR) and Tier 4 (ONNX) — cheap deterministic routing before the ML fallback; extracted fields now flow into `WorkQueueItem.extracted_fields` for both body-only and chunk paths.
 
 ## Why
 
-M2's first unchecked task. Legacy forms (no QR) are the highest-volume real-world edge case the existing pipeline handled worst — they fell all the way to the ML model (or `unknown` without one). Tier 2 routes them deterministically from their printed structure, with explainable confidence and HITL semantics.
+M2's second unchecked task. Body-only emails (the highest-frequency real case) previously went straight to the ML model — and to `unknown` when no model is installed. Tier 3 routes them deterministically from language evidence, no model required, with the taxonomy as the source of truth for what each form type "sounds like".
 
 ## How tested
 
-- `tests/test_tier2.py` (14 tests): every one of the 6 form types matches its template (form-ref hit → ≥0.9, complete); incomplete forms flagged review with capped confidence + RFI note; cover-letter-prepended forms still match (page_count correct); mixed Afrikaans/English still matches; field extraction verified against ground-truth params (policy/ID/name); no-match and weak-evidence cases return None / fall below threshold; title-only scoring; end-to-end engine routing via `tier2_template` with auto-route (0.95 ≥ 0.85).
-- **`test_scenario_d_legacy_form` rewritten**: previously skipped without `models/tier4_model.joblib`; now asserts `method == "tier2_template"`, `sub_type == maintenance_client`, confidence 0.95 — **the legacy-form path no longer depends on the ML model at all**.
-- Full suite: `python -m pytest tests/ -q` → **33 passed, 0 skipped** (was 19+1; scenario D un-skipped, no regressions).
-- Debugging notes: extraction was initially fooled by 12-digit IDs (fixed with label-aware ordering) and case-sensitive label matching (fixed with `re.IGNORECASE`).
+- `tests/test_tier3.py` (14 tests): every sub_type's generated body classifies to its own type via tier3 (parametrized over all 6); unknown text → None; ambiguous text → low confidence; Afrikaans withdrawal body → repurchase; Afrikaans claim body → claim family; policy + client-name extraction verified; engine `classify_email` routes via tier3 (`local_ner_keyword`); end-to-end body-only `process_inbound` routes with extracted_fields attached; confidence calibration (strong vs weak evidence).
+- Full suite: `python -m pytest tests/ -q` → **47 passed, 0 skipped** (was 33; +14 tier3, no regressions).
+- Debugging notes: closing-name regex greediness (fixed with lazy `[,\s]*?`) and case sensitivity (fixed with `re.IGNORECASE`) — both were caught by the tests.
 
 ## Notes
 
-- Scope: single-form PDFs. Multi-form legacy bulk (no QR) still goes through the existing page-split fallback; Tier 2 for page groups can build on `match_text` in a later pass.
-- OCR path is untested in CI (pytesseract not installed); it degrades to no-match, so it can't break the pipeline.
-- Diff ~430 lines (module + tests + wiring + doc updates).
+- Tier 3 runs before Tier 4 in `classify_email`; the QR path (Tier 1) is untouched. When a trained ONNX model is present, Tier 4 still handles everything Tier 3 declines (evidence below threshold / no evidence).
+- README architecture section updated: Tiers 2 and 3 no longer "Stubbed".
+- Diff ~380 lines (module + tests + wiring + docs).

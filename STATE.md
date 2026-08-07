@@ -14,9 +14,10 @@ M1 (productize) complete: wheel + container + CI + config + on-prem install chec
 
 M2 in progress. Tier 2 (template matching) implemented (`indexer/tiers/tier2.py`): form-ref/title/section/field signal registry, deterministic explainable confidence, completeness semantics (unsigned → review + RFI note), label-aware field extraction (policy/ID/name/amount), optional pytesseract OCR hook for scanned PDFs. Wired into `RuleEngine.process_inbound` between QR and page-split fallback; legacy-form scenario D now routes via tier2 with no model required (33 passed, 0 skipped).
 
+Tier 3 (NER & taxonomy) implemented (`indexer/tiers/tier3.py`): entity extraction (policy/ID/name/amount/date) + weighted keyword classification with Afrikaans coverage, wired into `classify_email` before Tier 4; extracted fields flow into routed tasks (47 passed, 0 skipped).
+
 ## Broken / incomplete
 
-- Tier 3 (NER & taxonomy) is stubbed: no tier3 module exists in `indexer/tiers/`
 - Eval harness + adversarial corpus not yet extended for the new tiers
 - No recorded pilot on real inbound documents; demo runs on the synthetic corpus (`main_demo.py` needs `data/corpus_10k/manifest_10k.parquet`)
 
