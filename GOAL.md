@@ -7,7 +7,7 @@ Sell large-scale email-indexing installs to large investors (Tessera AI Indexer 
 ### M1 — Productize for installs (packaging + deployment)
 
 - [x] Package the indexer as an installable artifact (wheel/container) with pinned dependencies — README install is currently a bare 8-package `pip install` list
-- [ ] Add CI (`.github/workflows`) that runs the existing suite (`tests/test_engine.py`, `tests/test_e2e_routing.py`) on every PR — no CI exists today
+ - [x] Add CI (`.github/workflows`) that runs the existing suite (`tests/test_engine.py`, `tests/test_e2e_routing.py`) on every PR — no CI exists today
 - [ ] Make installs config-driven: taxonomy path, model path, queue dirs, HITL confidence threshold in config rather than code
 - [ ] Write the on-prem install checklist (the product's selling point is data sovereignty — no data leaves the local environment)
 *Definition of done:* A fresh machine stands up a working install from the packaged artifact using only docs + one command, with CI green.
