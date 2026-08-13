@@ -38,7 +38,7 @@ number.
 | Simulated pilot — avg latency | **153 ms / email** (fresh re-run: 160 ms — machine-dependent) | simulated-pilot |
 | Simulated pilot — data sovereignty | **OK — all route methods local** | simulated-pilot |
 | Simulated pilot — threshold sweep 0.70–0.80 | **97.7% auto-route at 100% auto-route accuracy** | simulated-pilot |
-| Tier distribution (attachment-aware run) | QR 8,685 · template 1,314 · 1 scan-failure fallthrough | synthetic-corpus |
+| Tier distribution (attachment-aware run) | QR 8,686 · template 1,314 · **0 errors** (the earlier single QR-scan flake is fixed) | synthetic-corpus |
 
 Source labels: `synthetic-corpus` = generated emails/PDFs scored against
 generator ground truth · `simulated-pilot` = simulated inbound stream through
