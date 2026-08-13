@@ -33,7 +33,7 @@ Every inbound email is routed through a cascading pipeline, cheapest tier first:
 *Sources: eval harness + pilot simulator in-repo; see metrics_snapshot.md. Real-mail pilot in progress.*
 
 ## The offer
-- **On-prem installs** sized per queue or per document volume — license, subscription, or volume pricing (see pricing.md)
+- **On-prem installs** sized per queue or per document volume — license, subscription, or volume pricing (pricing options kept private; on request)
 - **Pilot path**: connect the client's real inbound queue for a measured pilot (accuracy, HITL rate, throughput) before committing
 
 ---

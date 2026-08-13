@@ -156,6 +156,12 @@ if __name__ == "__main__":
         input_dir = sys.argv[2] if len(sys.argv) > 2 else "data/corpus"
         batch_ingest(input_dir)
     elif mode == "watch":
-        mailbox_watcher(host="imap.example.com", email="indexer@meridian.co.za", password="demo")
+        import os as _os
+        _cred = _os.environ.get("IMAP_PASSWORD", "")
+        mailbox_watcher(
+            _os.environ.get("IMAP_HOST", "imap.example.com"),
+            _os.environ.get("IMAP_USER", "indexer@example.com"),
+            _cred,
+        )
     else:
         print(f"Unknown mode: {mode}")

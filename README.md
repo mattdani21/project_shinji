@@ -132,12 +132,31 @@ tessera-indexer check --config /path/to/tessera_indexer.yaml    # verify an inst
 
 ### Running the Demo (from source)
 
-The main demo processes a mix of clean and messy samples to showcase the routing logic (Auto-Routing vs. HITL).
+The canonical demo is the **mini demo**: 8 representative inbound emails run
+through the REAL pipeline (same path batch ingest / watcher use), covering
+every tier plus the HITL paths. It is fully self-contained — fixtures are
+generated inline, no model or corpus download needed:
 
 ```bash
+git clone https://github.com/mattdani21/project_shinji
+cd project_shinji
+pip install -e ".[dev]"
+PYTHONPATH=. python demo/mini_demo.py
+```
+
+Expected output: an 8-case decision table, every prediction `OK` (matches
+ground truth), and the `demo/run/` artifacts auto-cleaned afterward
+(`--keep` to inspect them).
+
+**Larger optional demo:** `python3 main_demo.py` showcases a broader mix of
+clean and messy samples, but requires the generated 10k corpus first:
+
+```bash
+PYTHONPATH=. python generator/scale_corpus.py     # generate the corpus
 python3 main_demo.py
 ```
-This will output the routing decisions, confidence scores, and populate the `data/workqueues/` and `data/human_review/` directories.
+
+This populates `data/workqueues/` and `data/human_review/`.
 
 ### Generating Synthetic Data
 
@@ -181,4 +200,6 @@ This outputs an accuracy report and an RFI (Request for Information) threshold a
 -   **`models/`**: Stores the ONNX model binaries and TF-IDF fallback models (Note: Large binaries are excluded from Git).
 -   **`data/`**: Stores generated corpora, training splits, and output queues.
 -   **`docs/`**: Documentation, including the Colab Handguide.
--   **`main_demo.py`**: The primary entry point to demonstrate the system end-to-end.
+-   **`demo/`**: Self-contained end-to-end demos. `demo/mini_demo.py` is the
+    canonical demo (8 cases, no corpus/model needed); `main_demo.py` at the
+    root is the larger optional demo (needs the generated 10k corpus).

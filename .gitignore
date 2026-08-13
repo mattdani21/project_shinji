@@ -37,5 +37,8 @@ pilot/reports/
 # Mini demo run artifacts
 demo/run/
 
+# Sales pricing stays private (removed from public tree; see git history + private archive)
+sales/pricing.md
+
 # OS
 .DS_Store

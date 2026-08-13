@@ -7,7 +7,9 @@ Everything needed to take an investor conversation from demo to close.
 | [one_pager.md](one_pager.md) | One-page product brief | The first 60 seconds of any conversation |
 | [demo_script.md](demo_script.md) | Scripted, runnable demo with expected outputs | Live demo / recorded walkthrough |
 | [metrics_snapshot.md](metrics_snapshot.md) | Calibrated metrics with sources | When they ask "prove it" |
-| [pricing.md](pricing.md) | Packaging & pricing options (draft) | When they ask "what does it cost" |
+
+> Pricing options (per-install / per-queue / volume) are kept private and are
+> available on request. They are draft options awaiting owner confirmation.
 
 **The story in one line:** Tessera routes every inbound document — QR-coded
 modern forms, legacy paper forms, messy free-text emails — to the right team

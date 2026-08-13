@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Tessera AI Indexer — multi-tier document routing (QR → OCR → NER → XLM-RoBERTa ONNX) with 100% local inference"
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "Proprietary" }
+license = { text = "MIT" }
 authors = [{ name = "Tessera (Empyrean)" }]
 keywords = ["document-indexing", "routing", "ocr", "ner", "onnx", "data-sovereignty", "workflow"]
 classifiers = [
