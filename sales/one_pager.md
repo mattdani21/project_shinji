@@ -24,7 +24,7 @@ Every inbound email is routed through a cascading pipeline, cheapest tier first:
 ## Proof (calibrated, reproducible)
 | Metric | Result |
 |---|---|
-| Routing accuracy, attachment-aware pipeline (10k corpus) | **99.99%** (9,999/10,000) |
+| Routing accuracy, attachment-aware pipeline (10k corpus) | **100%** (10,000/10,000) |
 | Auto-routed without human review | **97.3%**, of which **100% correct** |
 | Adversarial edge cases (legacy, scanned, Afrikaans, mismatched, incomplete) | **100% (100/100)** |
 | Simulated pilot, 600 emails end-to-end | **100% accuracy**, 5.7% HITL rate, **153 ms avg latency** |

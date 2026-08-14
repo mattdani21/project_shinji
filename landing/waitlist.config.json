@@ -1,4 +1,6 @@
 {
-  "storage": "google-sheet",
+  "storage": "airtable",
+  "base_id": "appz1qg2jAGvrAzRQ",
+  "table_id": "tblb76rMR6YMDYVEP",
   "form_url": ""
 }

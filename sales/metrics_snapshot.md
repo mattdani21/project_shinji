@@ -17,15 +17,16 @@ full 4-tier pipeline (`eval/run_comparison.py data/corpus_10k/manifest_10k.parqu
 
 | Metric | Value |
 |---|---|
-| Accuracy | **99.99%** (9,999/10,000) |
-| Auto-routed without human review | **97.27%** |
+| Accuracy | **100%** (10,000/10,000) |
+| Auto-routed without human review | **97.3%** |
 | Accuracy of auto-routed items | **100%** |
-| Calibration error (ECE) | **0.011** |
-| Tier distribution | QR 8,685 · template 1,314 · 1 scan failure* |
+| Calibration error (ECE) | **0.01** |
+| Tier distribution | QR 8,686 · template 1,314 · **0 errors** |
 
-\* The single failure was a cv2 QR-scan flake that **has since been fixed**
-(scan failures now fall through to Tier 2 instead of erroring; 25/25
-re-run clean). Re-running the eval would show 10,000/10,000.
+*Numbers refreshed 2026-08-13 from the same command chain (`eval/run_comparison.py
+data/corpus_10k/manifest_10k.parquet`). The earlier single QR-scan flake
+(9,999/10,000) is fixed: scan failures now fall through to Tier 2 instead of
+erroring, and the fresh run is 10,000/10,000 with 0 errors.*
 
 ## 2. Body-text routing (email-only, no attachment)
 
