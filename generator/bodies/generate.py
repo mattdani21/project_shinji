@@ -15,7 +15,7 @@ class BodyGenerator:
     At inference time (indexer/), no external API is ever called.
     """
     def __init__(self, delay_seconds: float = 2.0, max_retries: int = 3, use_api: bool = False):
-        self.api_key = os.environ.get("GEMINI_API_KEY", "REDACTED_GEMINI_KEY")
+        self.api_key = os.environ.get("GEMINI_API_KEY", "")
         self.url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={self.api_key}"
         self.delay = delay_seconds
         self.max_retries = max_retries

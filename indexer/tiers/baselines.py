@@ -34,7 +34,7 @@ class RandomBaseline:
 class GeminiCeiling:
     """Uses Gemini zero-shot to establish the max accuracy ceiling."""
     def __init__(self):
-        self.api_key = os.environ.get("GEMINI_API_KEY", "REDACTED_GEMINI_KEY")
+        self.api_key = os.environ.get("GEMINI_API_KEY", "")
         self.url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={self.api_key}"
         self.classes = [
             "repurchase", "new_business", "maintenance_client", 
