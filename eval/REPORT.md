@@ -112,7 +112,12 @@ PYTHONPATH=. python pilot/metrics.py pilot/reports/pilot_sim_results.csv
 #    → writes pilot/reports/pilot_report.md
 
 # 4) Adversarial suite
+#    First generate the 100 cases if they aren't present:
+PYTHONPATH=. python generator/adversarial_test.py
+#    → writes data/adversarial_test/adversarial_manifest.csv
+#    Then run the evaluation:
 PYTHONPATH=. python generator/adversarial_test.py eval
+#    → 100/100 (verified 2026-08-13, py3.11)
 ```
 
 Interactive HTML comparison of the same runs:
